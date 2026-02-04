@@ -32,22 +32,17 @@ tasks {
     }
 
     shadowJar {
-        archiveVersion = getByName<Jar>("jar").archiveVersion
-        archiveClassifier.set("")
-        from("../LICENSE")
-
-        listOf(
-            "xyz.jpenilla.reflectionremapper",
-            "net.fabricmc.mappingio",
-        ).forEach { relocate(it, "com.hpfxd.spectatorplus.paper.libs.$it") }
+        enabled = false
     }
 
     jar {
-        enabled = false // only output shadow jar
+        enabled = true
+        archiveClassifier.set("")
+        from("../LICENSE")
     }
 
     runServer {
-        minecraftVersion("1.21.10")
+        minecraftVersion("1.21.11")
     }
 
     named("build") {

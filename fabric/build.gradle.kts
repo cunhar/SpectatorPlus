@@ -1,5 +1,5 @@
 plugins {
-    id("fabric-loom") version "1.11.7"
+    id("fabric-loom") version "1.14-SNAPSHOT"
     id("spectatorplus.platform")
 }
 
@@ -22,6 +22,20 @@ loom {
         }
     }
 
+    runs {
+        getByName("client") {
+            client()
+            ideConfigGenerated(true)
+            runDir("run/client")
+        }
+
+        getByName("server") {
+            server()
+            ideConfigGenerated(true)
+            runDir("run")
+        }
+    }
+
     accessWidenerPath = file("src/main/resources/spectatorplus.accesswidener")
 }
 
@@ -32,7 +46,6 @@ dependencies {
         officialMojangMappings()
         parchment("org.parchmentmc.data:parchment-${property("parchment_minecraft_version")}:${property("parchment_version")}@zip")
     })
-
     modImplementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_version")}")
 
     include(modImplementation("me.lucko:fabric-permissions-api:${property("fabric_permissions_api_version")}")!!)

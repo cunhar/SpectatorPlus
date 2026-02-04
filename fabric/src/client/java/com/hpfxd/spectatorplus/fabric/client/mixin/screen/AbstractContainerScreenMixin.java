@@ -8,7 +8,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
@@ -46,8 +46,8 @@ public abstract class AbstractContainerScreenMixin {
     @Unique
     private boolean mouseMoved;
 
-    @Shadow @Final private static ResourceLocation SLOT_HIGHLIGHT_BACK_SPRITE;
-    @Shadow @Final private static ResourceLocation SLOT_HIGHLIGHT_FRONT_SPRITE;
+    @Shadow @Final private static Identifier SLOT_HIGHLIGHT_BACK_SPRITE;
+    @Shadow @Final private static Identifier SLOT_HIGHLIGHT_FRONT_SPRITE;
     @Shadow protected abstract void renderFloatingItem(GuiGraphics guiGraphics, ItemStack stack, int x, int y, String text);
     @Shadow @Final protected AbstractContainerMenu menu;
     @Shadow @Nullable protected abstract Slot getHoveredSlot(double mouseX, double mouseY);

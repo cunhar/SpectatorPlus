@@ -3,6 +3,7 @@ package com.hpfxd.spectatorplus.fabric.mixin;
 import com.google.common.collect.Lists;
 import com.hpfxd.spectatorplus.fabric.SpectatorMod;
 import com.hpfxd.spectatorplus.fabric.sync.ServerSyncController;
+import com.hpfxd.spectatorplus.fabric.sync.handler.EffectsSyncHandler;
 import com.hpfxd.spectatorplus.fabric.sync.packet.ClientboundExperienceSyncPacket;
 import com.hpfxd.spectatorplus.fabric.sync.packet.ClientboundFoodSyncPacket;
 import com.hpfxd.spectatorplus.fabric.sync.packet.ClientboundHotbarSyncPacket;
@@ -66,6 +67,7 @@ public abstract class ServerPlayerMixin extends Player {
             ServerSyncController.sendPacket(spectator, ClientboundFoodSyncPacket.initializing(target));
             ServerSyncController.sendPacket(spectator, ClientboundHotbarSyncPacket.initializing(target));
             ServerSyncController.sendPacket(spectator, ClientboundSelectedSlotSyncPacket.initializing(target));
+            EffectsSyncHandler.onStartSpectating(spectator, target);
 
             // Send initial map data patch packet if the target has a map in inventory
             for (final ItemStack stack : target.getInventory().getNonEquipmentItems()) {

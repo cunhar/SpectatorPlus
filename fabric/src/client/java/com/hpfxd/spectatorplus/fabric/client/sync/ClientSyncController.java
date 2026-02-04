@@ -1,6 +1,7 @@
 package com.hpfxd.spectatorplus.fabric.client.sync;
 
 import com.hpfxd.spectatorplus.fabric.client.sync.screen.ScreenSyncController;
+import com.hpfxd.spectatorplus.fabric.client.util.EffectUtil;
 import com.hpfxd.spectatorplus.fabric.sync.packet.ClientboundExperienceSyncPacket;
 import com.hpfxd.spectatorplus.fabric.sync.packet.ClientboundFoodSyncPacket;
 import com.hpfxd.spectatorplus.fabric.sync.packet.ClientboundHotbarSyncPacket;
@@ -11,7 +12,7 @@ import com.hpfxd.spectatorplus.fabric.sync.packet.ClientboundEffectsSyncPacket;
 import com.hpfxd.spectatorplus.fabric.sync.SyncedEffect;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
@@ -42,32 +43,8 @@ public class ClientSyncController {
 
     private static void handle(ClientboundEffectsSyncPacket packet, ClientPlayNetworking.Context context) {
         setSyncData(packet.playerId());
-        syncData.effects = packet.effects(); // Now List<SyncedEffect>
-        System.out.println("[SpectatorPlus] Synced effects: " + syncData.effects);
-
-        // var client = Minecraft.getInstance();
-        // if (client.player != null) {
-        //     // Remove all current effects from the client player
-        //     List<Holder<MobEffect>> toRemove = new ArrayList<>(client.player.getActiveEffectsMap().keySet());
-        //     for (Holder<MobEffect> effect : toRemove) {
-        //         System.out.println("[SpectatorPlus] Removing effect: " + BuiltInRegistries.MOB_EFFECT.getKey(effect.value()));
-        //         client.player.removeEffect(effect);
-        //     }
-        //     // Add all synced effects to the client player
-        //     for (SyncedEffect synced : syncData.effects) {
-        //         System.out.println("[SpectatorPlus] Syncing effect: " + synced.effectKey + " duration=" + synced.duration + " amplifier=" + synced.amplifier);
-        //         java.util.Optional<Holder.Reference<MobEffect>> optHolder = BuiltInRegistries.MOB_EFFECT.get(ResourceLocation.tryParse(synced.effectKey));
-        //         if (optHolder.isPresent()) {
-        //             MobEffect effect = optHolder.get().value();
-        //             Holder<MobEffect> holder = Holder.direct(effect);
-        //             MobEffectInstance instance = new MobEffectInstance(holder, synced.duration, synced.amplifier);
-        //             client.player.forceAddEffect(instance, client.player);
-        //             System.out.println("[SpectatorPlus] Added effect: " + synced.effectKey);
-        //         } else {
-        //             System.out.println("[SpectatorPlus] Effect not found in registry: " + synced.effectKey);
-        //         }
-        //     }
-        // }
+        syncData.effects = packet.effects();
+        EffectUtil.updateEffectInstances(packet.effects());
     }
 
     private static void handle(ClientboundExperienceSyncPacket packet, ClientPlayNetworking.Context context) {

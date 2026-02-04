@@ -55,8 +55,10 @@ public abstract class ItemInHandRendererMixin {
 
             if (this.spectated == spectated) {
                 float f = spectated.getAttackStrengthScale(1.0F);
-                this.mainHandHeight += Mth.clamp((this.mainHandItem == mainHandItem ? f * f * f : 0.0F) - this.mainHandHeight, -0.4F, 0.4F);
-                this.offHandHeight += Mth.clamp((float) (this.offHandItem == offHandItem ? 1 : 0) - this.offHandHeight, -0.4F, 0.4F);
+                float g = this.mainHandItem != mainHandItem ? 0.0F : f * f * f;
+                float h = this.offHandItem != offHandItem ? 0.0F : 1.0F;
+                this.mainHandHeight = this.mainHandHeight + Mth.clamp(g - this.mainHandHeight, -0.4F, 0.4F);
+                this.offHandHeight = this.offHandHeight + Mth.clamp(h - this.offHandHeight, -0.4F, 0.4F);
 
                 if (this.mainHandHeight < 0.1F) {
                     this.mainHandItem = mainHandItem;

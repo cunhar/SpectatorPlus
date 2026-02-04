@@ -40,7 +40,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.modify.LocalVariableDiscriminator.Context.Local;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.core.Holder;
 
 @Mixin(Gui.class)
@@ -54,15 +54,15 @@ public abstract class GuiMixin {
     @Shadow @Final private SpectatorGui spectatorGui;
 
 
-    // Use correct ResourceLocations for vanilla empty armor slot icons from the GUI atlas
-    private static final ResourceLocation EMPTY_ARMOR_SLOT_HELMET = ResourceLocation.withDefaultNamespace("container/slot/helmet");
-    private static final ResourceLocation EMPTY_ARMOR_SLOT_CHESTPLATE = ResourceLocation.withDefaultNamespace("container/slot/chestplate");
-    private static final ResourceLocation EMPTY_ARMOR_SLOT_LEGGINGS = ResourceLocation.withDefaultNamespace("container/slot/leggings");
-    private static final ResourceLocation EMPTY_ARMOR_SLOT_BOOTS = ResourceLocation.withDefaultNamespace("container/slot/boots");
-    private static final ResourceLocation EFFECT_BACKGROUND_AMBIENT_SPRITE = ResourceLocation.withDefaultNamespace("hud/effect_background_ambient");
-    private static final ResourceLocation EFFECT_BACKGROUND_SPRITE = ResourceLocation.withDefaultNamespace("hud/effect_background");
+    // Use correct Identifiers for vanilla empty armor slot icons from the GUI atlas
+    private static final Identifier EMPTY_ARMOR_SLOT_HELMET = Identifier.withDefaultNamespace("container/slot/helmet");
+    private static final Identifier EMPTY_ARMOR_SLOT_CHESTPLATE = Identifier.withDefaultNamespace("container/slot/chestplate");
+    private static final Identifier EMPTY_ARMOR_SLOT_LEGGINGS = Identifier.withDefaultNamespace("container/slot/leggings");
+    private static final Identifier EMPTY_ARMOR_SLOT_BOOTS = Identifier.withDefaultNamespace("container/slot/boots");
+    private static final Identifier EFFECT_BACKGROUND_AMBIENT_SPRITE = Identifier.withDefaultNamespace("hud/effect_background_ambient");
+    private static final Identifier EFFECT_BACKGROUND_SPRITE = Identifier.withDefaultNamespace("hud/effect_background");
 
-    private static final ResourceLocation[] TEXTURE_EMPTY_SLOTS = new ResourceLocation[]{
+    private static final Identifier[] TEXTURE_EMPTY_SLOTS = new Identifier[]{
         EMPTY_ARMOR_SLOT_BOOTS, EMPTY_ARMOR_SLOT_LEGGINGS, EMPTY_ARMOR_SLOT_CHESTPLATE, EMPTY_ARMOR_SLOT_HELMET
     };
 
@@ -178,20 +178,19 @@ public abstract class GuiMixin {
                     int effectBaseY = baseY + slots.length * (itemHeight + spacing) + spacing; // start below armor
 
                     // Render all active effect icons down the right side below armor
-                    LocalPlayer player = this.minecraft.player;
-                    if (player != null && player.getActiveEffects() != null && !player.getActiveEffects().isEmpty()) {
+                    if (ClientSyncController.syncData.effects != null && !ClientSyncController.syncData.effects.isEmpty()) {
                         int effectIndex = 0;
-                        for (var effectInstance : player.getActiveEffects()) {
+                        for (var effectInstance : ClientSyncController.syncData.effects) {
                             int y = effectBaseY + effectIndex * (itemWidth + spacing);
 
                             // Draw vanilla effect background
                             guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, EFFECT_BACKGROUND_SPRITE, baseX, y, itemWidth, itemHeight);
 
-                            ResourceLocation effectIcon = Gui.getMobEffectSprite(effectInstance.getEffect());
+                            Identifier effectIcon = GuiMixin.getEffectIcon(effectInstance.effectKey);
                             guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, effectIcon, baseX + 2, y + 2, itemWidth - 4, itemHeight - 4);
 
                             // Draw effect level as a small white number on the top right of the icon
-                            int level = effectInstance.getAmplifier() + 1;
+                            int level = effectInstance.amplifier + 1;
                             String levelText = String.valueOf(level);
                             int levelTextWidth = this.minecraft.font.width(levelText);
                             int levelTextX = baseX + itemWidth - (int)(levelTextWidth * 0.4F) - 3; // right-align inside top-right corner
@@ -202,7 +201,7 @@ public abstract class GuiMixin {
                             guiGraphics.pose().popMatrix();
 
                             // Draw duration bar (1px wide) to the left of the effect icon, color changes with percent
-                            int duration = effectInstance.getDuration();
+                            int duration = effectInstance.duration;
                             int maxDuration = 3600; // 3 minutes, adjust as needed
                             float percent = maxDuration > 0 ? (duration / (float)maxDuration) : 1.0F;
                             int maxBarHeight = itemHeight - 2;
@@ -365,8 +364,8 @@ public abstract class GuiMixin {
         }
         return instance;
     }
-    // Map EffectType to vanilla effect icon ResourceLocation
-    private static ResourceLocation getEffectIcon(String effectKey) {
+    // Map EffectType to vanilla effect icon Identifier
+    private static Identifier getEffectIcon(String effectKey) {
         // If effectKey contains a namespace (e.g., minecraft:nausea), strip it
         String key = effectKey;
         int colonIdx = key.indexOf(":");
@@ -375,7 +374,7 @@ public abstract class GuiMixin {
         }
         // Vanilla effect icons are in the GUI atlas as effect/<effectKey>
         // The effectKey should be lowercase, matching the registry name
-        return ResourceLocation.withDefaultNamespace("mob_effect/" + key.toLowerCase());
+        return Identifier.withDefaultNamespace("mob_effect/" + key.toLowerCase());
     }
 
 }

@@ -6,7 +6,7 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +23,7 @@ public record ClientboundInventorySyncPacket(
         ItemStack[] items
 ) implements ClientboundSyncPacket {
     public static final StreamCodec<RegistryFriendlyByteBuf, ClientboundInventorySyncPacket> STREAM_CODEC = CustomPacketPayload.codec(ClientboundInventorySyncPacket::write, ClientboundInventorySyncPacket::new);
-    public static final CustomPacketPayload.Type<ClientboundInventorySyncPacket> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.parse("spectatorplus:inventory_sync"));
+    public static final CustomPacketPayload.Type<ClientboundInventorySyncPacket> TYPE = new CustomPacketPayload.Type<>(Identifier.parse("spectatorplus:inventory_sync"));
     public static final int ITEMS_LENGTH = 4 * 9 + 4 + 1; // 36 main + 4 armor + 1 offhand = 41
     private static final String PERMISSION = "spectatorplus.sync.inventory";
 

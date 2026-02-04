@@ -13,8 +13,8 @@ plugins {
 rootProject.name = "spectatorplus"
 
 includeBuild("build-logic")
-this.setupSubproject("paper")
-this.setupSubproject("fabric")
+setupSubproject("paper")
+setupSubproject("fabric")
 
 fun setupSubproject(moduleName: String) {
     val name = "spectatorplus-$moduleName"

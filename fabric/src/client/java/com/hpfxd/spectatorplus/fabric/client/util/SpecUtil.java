@@ -21,17 +21,17 @@ public final class SpecUtil {
         return null;
     }
 
-    /**
-     * Returns the synced MobEffectInstance for the given entity and effect, or null if not found.
-     */
-    public static net.minecraft.world.effect.MobEffectInstance getSyncedEffect(LivingEntity entity, Holder<MobEffect> effect) {
-        if (ClientSyncController.syncData == null || ClientSyncController.syncData.effects == null) return null;
-        String queryKey = effect.unwrapKey().get().location().toString();
-        for (com.hpfxd.spectatorplus.fabric.sync.SyncedEffect synced : ClientSyncController.syncData.effects) {
-            if (queryKey.equals(synced.effectKey)) {
-                return new net.minecraft.world.effect.MobEffectInstance(effect, synced.duration, synced.amplifier);
-            }
-        }
-        return null;
-    }
+    // /**
+    //  * Returns the synced MobEffectInstance for the given entity and effect, or null if not found.
+    //  */
+    // public static net.minecraft.world.effect.MobEffectInstance getSyncedEffect(LivingEntity entity, Holder<MobEffect> effect) {
+    //     if (ClientSyncController.syncData == null || ClientSyncController.syncData.effects == null) return null;
+    //     String queryKey = effect.unwrapKey().get().identifier().toString();
+    //     for (com.hpfxd.spectatorplus.fabric.sync.SyncedEffect synced : ClientSyncController.syncData.effects) {
+    //         if (queryKey.equals(synced.effectKey)) {
+    //             return new net.minecraft.world.effect.MobEffectInstance(effect, synced.duration, synced.amplifier);
+    //         }
+    //     }
+    //     return null;
+    // }
 }

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,6 +35,9 @@ public interface ItemInHandRendererAccessor {
 
     @Accessor
     ItemStack getOffHandItem();
+
+    @Accessor
+    ItemModelResolver getItemModelResolver();
 
     @Invoker("isChargedCrossbow")
     static boolean invokeIsChargedCrossbow(ItemStack stack) {

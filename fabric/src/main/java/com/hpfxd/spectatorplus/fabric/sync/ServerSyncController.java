@@ -1,5 +1,6 @@
 package com.hpfxd.spectatorplus.fabric.sync;
 
+import com.hpfxd.spectatorplus.fabric.sync.handler.EffectsSyncHandler;
 import com.hpfxd.spectatorplus.fabric.sync.handler.HotbarSyncHandler;
 import com.hpfxd.spectatorplus.fabric.sync.handler.ScreenSyncHandler;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -15,6 +16,7 @@ public class ServerSyncController {
 
         HotbarSyncHandler.init();
         ScreenSyncHandler.init();
+        EffectsSyncHandler.init();
     }
 
     public static void sendPacket(ServerPlayer serverPlayer, ClientboundSyncPacket packet) {

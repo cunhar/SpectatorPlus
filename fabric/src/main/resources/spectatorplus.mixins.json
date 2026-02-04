@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "ChunkMapAccessor",
+    "LivingEntityMixin",
     "ServerGamePacketListenerImplMixin",
     "ServerPlayerMixin",
     "TrackedEntityMixin"

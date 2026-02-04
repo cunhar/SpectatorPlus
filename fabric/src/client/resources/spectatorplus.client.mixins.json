@@ -9,7 +9,6 @@
     "EntityMixin",
     "EntityRendererMixin",
     "ExperienceBarRendererMixin",
-    "GameRendererAccessor",
     "GameRendererMixin",
     "GuiMixin",
     "InventoryAccessor",
@@ -18,6 +17,8 @@
     "LevelRendererAccessor",
     "LevelRendererMixin",
     "LivingEntityMixin",
+    "LocalPlayerAccessor",
+    "LocalPlayerMixin",
     "MinecraftMixin",
     "PlayerMenuItemAccessor",
     "PlayerMenuItemMixin",
@@ -34,5 +35,8 @@
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "mixins": [
+    "LivingEntityAccessor"
+  ]
 }

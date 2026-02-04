@@ -16,8 +16,10 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -45,12 +47,24 @@ public abstract class GameRendererMixin {
     @Unique private float xBobO;
     @Unique private float yBobO;
 
+//    @Redirect(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;mulPose(Lorg/joml/Matrix4fc;)V", ordinal = 0))
+//    private void redirectMulPose(PoseStack poseStack, Matrix4fc matrix) {
+//        // In spectator mode, the projection matrix contains rotation data from the spectated player,
+//        // while arm rendering calculations are based on the localPlayer's viewpoint.
+//        // We must skip this mulPose operation when spectating to avoid rendering arms with incorrect orientation.
+//        if (this.minecraft.player == null
+//                || this.minecraft.player.gameMode() != GameType.SPECTATOR
+//                || !this.minecraft.options.getCameraType().isFirstPerson()) {
+//            poseStack.mulPose(matrix);
+//        }
+//    }
+
     @Inject(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4fStack;popMatrix()Lorg/joml/Matrix4fStack;", remap = false))
     public void spectatorplus$renderItemInHand(float partialTicks, boolean sleeping, Matrix4f projectionMatrix, CallbackInfo ci, @Local PoseStack poseStackIn) {
         if (SpectatorClientMod.config.renderArms && this.minecraft.player != null && this.minecraft.options.getCameraType().isFirstPerson() && !this.minecraft.options.hideGui) {
             final AbstractClientPlayer spectated = SpecUtil.getCameraPlayer(this.minecraft);
             if (spectated != null && !spectated.isSpectator()) {
-                this.lightTexture.turnOnLightLayer();
+                //this.lightTexture.turnOnLightLayer();
 
                 float attackAnim = spectated.getAttackAnim(partialTicks);
                 final InteractionHand interactionHand = MoreObjects.firstNonNull(spectated.swingingArm, InteractionHand.MAIN_HAND);
@@ -67,7 +81,7 @@ public abstract class GameRendererMixin {
 
                 if (handRenderSelection.renderMainHand) {
                     final float swingProgress = interactionHand == InteractionHand.MAIN_HAND ? attackAnim : 0.0F;
-                    final float equippedProgress = 1F - Mth.lerp(partialTicks, accessor.getOMainHandHeight(), accessor.getMainHandHeight());
+                    final float equippedProgress = accessor.getItemModelResolver().swapAnimationScale(accessor.getMainHandItem()) * (1F - Mth.lerp(partialTicks, accessor.getOMainHandHeight(), accessor.getMainHandHeight()));
 
                         accessor.invokeRenderArmWithItem(spectated, partialTicks,
                             pitch, InteractionHand.MAIN_HAND, swingProgress, accessor.getMainHandItem(), equippedProgress,
@@ -76,14 +90,15 @@ public abstract class GameRendererMixin {
 
                 if (handRenderSelection.renderOffHand) {
                     final float swingProgress = interactionHand == InteractionHand.OFF_HAND ? attackAnim : 0.0F;
-                    final float equippedProgress = 1F - Mth.lerp(partialTicks, accessor.getOOffHandHeight(), accessor.getOffHandHeight());
+                    final float equippedProgress = accessor.getItemModelResolver().swapAnimationScale(accessor.getOffHandItem()) * (1F - Mth.lerp(partialTicks, accessor.getOOffHandHeight(), accessor.getOffHandHeight()));
 
                         accessor.invokeRenderArmWithItem(spectated, partialTicks,
                             pitch, InteractionHand.OFF_HAND, swingProgress, accessor.getOffHandItem(), equippedProgress,
                             poseStackIn, submitNodeCollector, packedLightCoords);
                 }
 
-                this.lightTexture.turnOffLightLayer();
+                //this.lightTexture.turnOffLightLayer();
+                this.minecraft.gameRenderer.getFeatureRenderDispatcher().renderAllFeatures();
                 this.renderBuffers.bufferSource().endBatch();
             }
         }
@@ -161,25 +176,4 @@ public abstract class GameRendererMixin {
         if (minecraft.getCameraEntity() == this.minecraft.player) return instance.getInterpolatedBob(partialTick);
         return Mth.lerp(partialTick, this.bobO, this.bob);
     }
-
-    @ModifyExpressionValue(method = "pick(F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;blockInteractionRange()D"))
-    private double spectatorplus$modifyBlockInteractionRange(double original) {
-        final AbstractClientPlayer spectated = SpecUtil.getCameraPlayer(this.minecraft);
-        if (spectated != null) {
-            return spectated.blockInteractionRange();
-        }
-
-        return original;
-    }
-
-    @ModifyExpressionValue(method = "pick(F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;entityInteractionRange()D"))
-    private double spectatorplus$modifyEntityInteractionRange(double original) {
-        final AbstractClientPlayer spectated = SpecUtil.getCameraPlayer(this.minecraft);
-        if (spectated != null) {
-            return spectated.entityInteractionRange();
-        }
-
-        return original;
-    }
-
 }

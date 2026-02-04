@@ -6,7 +6,7 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,7 +19,7 @@ public record ClientboundEffectsSyncPacket(
     List<SyncedEffect> effects
 ) implements ClientboundSyncPacket {
     public static final StreamCodec<FriendlyByteBuf, ClientboundEffectsSyncPacket> STREAM_CODEC = CustomPacketPayload.codec(ClientboundEffectsSyncPacket::write, ClientboundEffectsSyncPacket::new);
-    public static final CustomPacketPayload.Type<ClientboundEffectsSyncPacket> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.parse("spectatorplus:effects_sync"));
+    public static final CustomPacketPayload.Type<ClientboundEffectsSyncPacket> TYPE = new CustomPacketPayload.Type<>(Identifier.parse("spectatorplus:effects_sync"));
     private static final String PERMISSION = "spectatorplus.sync.effects";
 
     public ClientboundEffectsSyncPacket(FriendlyByteBuf buf) {
