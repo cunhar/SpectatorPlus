@@ -24,7 +24,7 @@ public abstract class MinecraftMixin {
     @Inject(method = "setCameraEntity(Lnet/minecraft/world/entity/Entity;)V", at = @At(value = "TAIL"))
     private void spectatorplus$resetSyncDataOnCameraSwitch(Entity viewingEntity, CallbackInfo ci) {
         if (ClientSyncController.syncData != null && (viewingEntity == null || !ClientSyncController.syncData.playerId.equals(viewingEntity.getUUID()))) {
-            ClientSyncController.setSyncData(null);
+            ClientSyncController.createSyncDataIfNull(null);
         }
     }
 
@@ -64,7 +64,7 @@ public abstract class MinecraftMixin {
 
         if (ClientPlayNetworking.canSend(ServerboundOpenedInventorySyncPacket.TYPE)) {
             // just let the server we've opened our inventory. this is used to sync with other users spectating this client
-            ClientPlayNetworking.send(new ServerboundOpenedInventorySyncPacket());
+            ClientPlayNetworking.send(new ServerboundOpenedInventorySyncPacket(true));
         }
         return true;
     }

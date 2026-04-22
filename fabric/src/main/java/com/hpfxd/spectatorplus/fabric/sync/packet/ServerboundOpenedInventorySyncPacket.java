@@ -5,18 +5,29 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
-
+/*
+    * Sent by the client to the server to synchronize the opened inventory state of the player.
+ */
 public final class ServerboundOpenedInventorySyncPacket implements ServerboundSyncPacket {
     public static final StreamCodec<FriendlyByteBuf, ServerboundOpenedInventorySyncPacket> STREAM_CODEC = CustomPacketPayload.codec(ServerboundOpenedInventorySyncPacket::write, ServerboundOpenedInventorySyncPacket::new);
     public static final CustomPacketPayload.Type<ServerboundOpenedInventorySyncPacket> TYPE = new CustomPacketPayload.Type<>(Identifier.parse("spectatorplus:opened_inventory_sync"));
 
-    public ServerboundOpenedInventorySyncPacket() {
+    private final boolean isOpened;
+
+    public ServerboundOpenedInventorySyncPacket(boolean isOpened) {
+        this.isOpened = isOpened;
     }
 
     public ServerboundOpenedInventorySyncPacket(FriendlyByteBuf buf) {
+        this.isOpened = buf.readBoolean();
     }
 
     public void write(FriendlyByteBuf buf) {
+        buf.writeBoolean(this.isOpened);
+    }
+
+    public boolean isOpened() {
+        return this.isOpened;
     }
 
     @Override

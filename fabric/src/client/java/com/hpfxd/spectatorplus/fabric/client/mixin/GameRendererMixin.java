@@ -8,9 +8,9 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.ClientAvatarState;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
@@ -18,7 +18,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,7 +25,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GameRenderer.class)
@@ -35,9 +33,6 @@ public abstract class GameRendererMixin {
     @Shadow
     @Final
     private Minecraft minecraft;
-    @Shadow
-    @Final
-    private LightTexture lightTexture;
     @Shadow
     @Final
     private RenderBuffers renderBuffers;
@@ -80,7 +75,7 @@ public abstract class GameRendererMixin {
     // }
 
     @Inject(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4fStack;popMatrix()Lorg/joml/Matrix4fStack;", remap = false))
-    public void spectatorplus$renderItemInHand(float partialTicks, boolean sleeping, Matrix4f projectionMatrix,
+    public void spectatorplus$renderItemInHand(CameraRenderState cameraState, float partialTicks, Matrix4fc projectionMatrix,
             CallbackInfo ci, @Local PoseStack poseStackIn) {
         if (SpectatorClientMod.config.renderArms && this.minecraft.player != null
                 && this.minecraft.options.getCameraType().isFirstPerson() && !this.minecraft.options.hideGui) {
@@ -201,18 +196,18 @@ public abstract class GameRendererMixin {
         }
     }
 
-    @Redirect(method = "bobView", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/ClientAvatarState;getBackwardsInterpolatedWalkDistance(F)F"))
-    float spectatorplus$modifyBobWalkDist(ClientAvatarState instance, float partialTick) {
+    @ModifyExpressionValue(method = "bobView", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/level/CameraEntityRenderState;backwardsInterpolatedWalkDistance:F"))
+    float spectatorplus$modifyBobWalkDist(float original) {
         if (minecraft.getCameraEntity() == this.minecraft.player)
-            return instance.getBackwardsInterpolatedWalkDistance(partialTick);
+            return original;
         float f = this.walkDist - this.walkDistO;
-        return -(this.walkDist + f * partialTick);
+        return -(this.walkDist + f);
     }
 
-    @Redirect(method = "bobView", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/ClientAvatarState;getInterpolatedBob(F)F"))
-    float spectatorplus$modifyBobValue(ClientAvatarState instance, float partialTick) {
+    @ModifyExpressionValue(method = "bobView", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/level/CameraEntityRenderState;bob:F"))
+    float spectatorplus$modifyBobValue(float original) {
         if (minecraft.getCameraEntity() == this.minecraft.player)
-            return instance.getInterpolatedBob(partialTick);
-        return Mth.lerp(partialTick, this.bobO, this.bob);
+            return original;
+        return Mth.lerp(1.0F, this.bobO, this.bob);
     }
 }

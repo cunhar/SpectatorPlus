@@ -22,7 +22,7 @@ public class HotbarSyncHandler {
 
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> HOTBARS.clear());
 
-        ServerTickEvents.END_WORLD_TICK.register(HotbarSyncHandler::tick);
+        ServerTickEvents.END_LEVEL_TICK.register(HotbarSyncHandler::tick);
     }
 
     private static void tick(ServerLevel level) {

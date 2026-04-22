@@ -16,7 +16,7 @@ public class EffectUtil {
     private static final Map<Holder<MobEffect>, MobEffectInstance> activeEffects = new HashMap<>();
 
     public static void updateEffectInstances(List<SyncedEffect> effects) {
-        // 收集新的效果
+        // collecting new effects
         Set<Holder<MobEffect>> newEffects = new HashSet<>();
 
         for (SyncedEffect syncedEffect : effects) {
@@ -25,10 +25,10 @@ public class EffectUtil {
             newEffects.add(effect);
         }
 
-        // 移除不再存在的效果
+        // remove effects that are no longer present
         activeEffects.entrySet().removeIf(entry -> !newEffects.contains(entry.getKey()));
 
-        // 添加新效果（保持现有实例的BlendState）
+        // add new effects (keep existing instances' BlendState)
         for (SyncedEffect syncedEffect : effects) {
             Holder<MobEffect> effect = BuiltInRegistries.MOB_EFFECT.get(Identifier.parse(syncedEffect.effectKey))
                     .orElseThrow(() -> new IllegalArgumentException("Unknown effect: " + syncedEffect.effectKey));
@@ -53,7 +53,6 @@ public class EffectUtil {
                hasValidSyncData();
     }
 
-    // 直接返回原版格式的activeEffects
     public static Map<Holder<MobEffect>, MobEffectInstance> getActiveEffectsMap() {
         return activeEffects;
     }

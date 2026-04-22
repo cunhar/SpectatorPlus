@@ -50,14 +50,14 @@
     }
   ],
   "depends": {
-    "fabricloader": ">=0.15.0",
-    "minecraft": "~1.21.11",
-    "java": ">=21",
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~26.1",
+    "java": ">=25",
     "fabric-api": "*",
     "fabric-permissions-api-v0": "*"
   },
   "suggests": {
-    "cloth-config": "^19.0.147",
-    "modmenu": "^16.0.0-rc.1"
+    "cloth-config": "*",
+    "modmenu": ">=18.0.0"
   }
 }

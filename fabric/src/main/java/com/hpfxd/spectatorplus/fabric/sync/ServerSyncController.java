@@ -1,8 +1,12 @@
 package com.hpfxd.spectatorplus.fabric.sync;
 
+import com.hpfxd.spectatorplus.fabric.sync.handler.ContainerSyncHandler;
+import com.hpfxd.spectatorplus.fabric.sync.handler.CursorSyncHandler;
 import com.hpfxd.spectatorplus.fabric.sync.handler.EffectsSyncHandler;
 import com.hpfxd.spectatorplus.fabric.sync.handler.HotbarSyncHandler;
+import com.hpfxd.spectatorplus.fabric.sync.handler.InventorySyncHandler;
 import com.hpfxd.spectatorplus.fabric.sync.handler.ScreenSyncHandler;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -16,7 +20,10 @@ public class ServerSyncController {
 
         HotbarSyncHandler.init();
         ScreenSyncHandler.init();
+        ContainerSyncHandler.init();
         EffectsSyncHandler.init();
+        InventorySyncHandler.init();
+        CursorSyncHandler.init();
     }
 
     public static void sendPacket(ServerPlayer serverPlayer, ClientboundSyncPacket packet) {

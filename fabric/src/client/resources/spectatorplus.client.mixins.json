@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "com.hpfxd.spectatorplus.fabric.client.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "client": [
     "ClientLevelAccessor",
     "ClientLevelMixin",
@@ -31,7 +31,8 @@
     "screen.ImageButtonAccessor",
     "screen.InventoryMenuMixin",
     "screen.InventoryScreenMixin",
-    "screen.MenuScreensMixin"
+    "screen.MenuScreensMixin",
+    "screen.ScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

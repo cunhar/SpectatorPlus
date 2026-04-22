@@ -25,7 +25,7 @@ public final class CustomPacketCodecs {
         final ItemStack[] items = new ItemStack[len];
 
         for (int slot = 0; slot < len; slot++) {
-            items[slot] = buf.readBoolean() ? ItemStack.OPTIONAL_STREAM_CODEC.decode(buf) : null;
+            items[slot] = buf.readBoolean() ? CustomPacketCodecs.readItem(buf) : null;
         }
 
         return items;
@@ -37,14 +37,22 @@ public final class CustomPacketCodecs {
         for (final ItemStack item : items) {
             buf.writeBoolean(item != null);
             if (item != null) {
-                ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, item);
+                CustomPacketCodecs.writeItem(buf, item);
             }
         }
     }
 
     public static ItemStack readItem(RegistryFriendlyByteBuf buf) {
         try {
-            return ItemStack.OPTIONAL_STREAM_CODEC.decode(buf);
+            int length = buf.readInt();
+            if (length == 0) {
+                return ItemStack.EMPTY;
+            }
+            byte[] bytes = new byte[length];
+            buf.readBytes(bytes);
+            java.io.ByteArrayInputStream in = new java.io.ByteArrayInputStream(bytes);
+            net.minecraft.nbt.CompoundTag tag = net.minecraft.nbt.NbtIo.readCompressed(in, net.minecraft.nbt.NbtAccounter.unlimitedHeap());
+            return ItemStack.OPTIONAL_CODEC.parse(buf.registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), tag).getOrThrow(DecoderException::new);
         } catch (Exception e) {
             throw new DecoderException("Failed to read ItemStack", e);
         }
@@ -52,7 +60,20 @@ public final class CustomPacketCodecs {
 
     public static void writeItem(RegistryFriendlyByteBuf buf, @NotNull ItemStack item) {
         try {
-            ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, item);
+            if (item.isEmpty()) {
+                buf.writeInt(0);
+                return;
+            }
+            net.minecraft.nbt.Tag tag = ItemStack.OPTIONAL_CODEC.encodeStart(buf.registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), item).getOrThrow(EncoderException::new);
+            if (!(tag instanceof net.minecraft.nbt.CompoundTag)) {
+                buf.writeInt(0);
+                return;
+            }
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            net.minecraft.nbt.NbtIo.writeCompressed((net.minecraft.nbt.CompoundTag)tag, out);
+            byte[] bytes = out.toByteArray();
+            buf.writeInt(bytes.length);
+            buf.writeBytes(bytes);
         } catch (Exception e) {
             throw new EncoderException("Failed to write ItemStack", e);
         }

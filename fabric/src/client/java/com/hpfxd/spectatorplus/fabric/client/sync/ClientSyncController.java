@@ -5,16 +5,8 @@ import com.hpfxd.spectatorplus.fabric.client.util.EffectUtil;
 import com.hpfxd.spectatorplus.fabric.sync.packet.ClientboundExperienceSyncPacket;
 import com.hpfxd.spectatorplus.fabric.sync.packet.ClientboundFoodSyncPacket;
 import com.hpfxd.spectatorplus.fabric.sync.packet.ClientboundHotbarSyncPacket;
-import com.hpfxd.spectatorplus.fabric.sync.packet.ClientboundInventorySyncPacket;
 import com.hpfxd.spectatorplus.fabric.sync.packet.ClientboundSelectedSlotSyncPacket;
-import java.util.List;
 import com.hpfxd.spectatorplus.fabric.sync.packet.ClientboundEffectsSyncPacket;
-import com.hpfxd.spectatorplus.fabric.sync.SyncedEffect;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.Holder;
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -22,38 +14,35 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.ArrayList;
 import java.util.UUID;
 
 public class ClientSyncController {
     public static ClientSyncData syncData;
-    private static Minecraft minecraft = Minecraft.getInstance();
+    private static final Minecraft minecraft = Minecraft.getInstance();
 
     public static void init() {
         ClientPlayNetworking.registerGlobalReceiver(ClientboundExperienceSyncPacket.TYPE, ClientSyncController::handle);
         ClientPlayNetworking.registerGlobalReceiver(ClientboundFoodSyncPacket.TYPE, ClientSyncController::handle);
         ClientPlayNetworking.registerGlobalReceiver(ClientboundHotbarSyncPacket.TYPE, ClientSyncController::handle);
-        ClientPlayNetworking.registerGlobalReceiver(ClientboundSelectedSlotSyncPacket.TYPE,
-                ClientSyncController::handle);
+        ClientPlayNetworking.registerGlobalReceiver(ClientboundSelectedSlotSyncPacket.TYPE, ClientSyncController::handle);
         ClientPlayNetworking.registerGlobalReceiver(ClientboundEffectsSyncPacket.TYPE, ClientSyncController::handle);
-        ClientLoginConnectionEvents.INIT.register((handler, client) -> setSyncData(null));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> setSyncData(null));
+        ClientLoginConnectionEvents.INIT.register((handler, client) -> createSyncDataIfNull(null));
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> createSyncDataIfNull(null));
 
         ScreenSyncController.init();
     }
 
     private static void handle(ClientboundEffectsSyncPacket packet, ClientPlayNetworking.Context context) {
-        setSyncData(packet.playerId());
+        createSyncDataIfNull(packet.playerId());
         syncData.effects = packet.effects();
         EffectUtil.updateEffectInstances(packet.effects());
     }
 
     private static void handle(ClientboundExperienceSyncPacket packet, ClientPlayNetworking.Context context) {
-        setSyncData(packet.playerId());
+        createSyncDataIfNull(packet.playerId());
 
         var player = minecraft.player;
-        if (player != null
-                && (packet.progress() != player.experienceProgress || packet.level() != player.experienceLevel))
+        if (player != null && (packet.progress() != player.experienceProgress || packet.level() != player.experienceLevel))
             player.experienceDisplayStartTick = player.tickCount;
 
         syncData.experienceProgress = packet.progress();
@@ -62,7 +51,7 @@ public class ClientSyncController {
     }
 
     private static void handle(ClientboundFoodSyncPacket packet, ClientPlayNetworking.Context context) {
-        setSyncData(packet.playerId());
+        createSyncDataIfNull(packet.playerId());
 
         if (syncData.foodData == null) {
             syncData.foodData = new FoodData();
@@ -72,7 +61,7 @@ public class ClientSyncController {
     }
 
     private static void handle(ClientboundHotbarSyncPacket packet, ClientPlayNetworking.Context context) {
-        setSyncData(packet.playerId());
+        createSyncDataIfNull(packet.playerId());
 
         final ItemStack[] items = packet.items();
         for (int slot = 0; slot < items.length; slot++) {
@@ -85,12 +74,12 @@ public class ClientSyncController {
     }
 
     private static void handle(ClientboundSelectedSlotSyncPacket packet, ClientPlayNetworking.Context context) {
-        setSyncData(packet.playerId());
+        createSyncDataIfNull(packet.playerId());
 
         syncData.selectedHotbarSlot = packet.selectedSlot();
     }
 
-    public static void setSyncData(UUID playerId) {
+    public static void createSyncDataIfNull(UUID playerId) {
         if (playerId == null) {
             syncData = null;
         } else if (syncData == null || !syncData.playerId.equals(playerId)) {

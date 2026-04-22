@@ -20,6 +20,7 @@ public record ClientboundHotbarSyncPacket(
     public static final StreamCodec<RegistryFriendlyByteBuf, ClientboundHotbarSyncPacket> STREAM_CODEC = CustomPacketPayload.codec(ClientboundHotbarSyncPacket::write, ClientboundHotbarSyncPacket::new);
     public static final CustomPacketPayload.Type<ClientboundHotbarSyncPacket> TYPE = new CustomPacketPayload.Type<>(Identifier.parse("spectatorplus:hotbar_sync"));
     static final String PERMISSION = "spectatorplus.sync.hotbar";
+    public static final int ITEMS_LENGTH = 9;
 
     public static ClientboundHotbarSyncPacket initializing(ServerPlayer target) {
         final ItemStack[] items = new ItemStack[9];

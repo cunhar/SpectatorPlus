@@ -1,12 +1,11 @@
 plugins {
-    id("fabric-loom") version "1.14-SNAPSHOT"
+    id("net.fabricmc.fabric-loom") version "1.15.5"
     id("spectatorplus.platform")
 }
 
 description = "A Fabric mod that improves spectator mode by showing the hotbar, health, and held item of the spectated player"
 
 repositories {
-    maven("https://maven.parchmentmc.org")
     maven("https://oss.sonatype.org/content/repositories/snapshots")
     maven("https://maven.shedaniel.me/")
     maven("https://maven.terraformersmc.com/releases/")
@@ -41,20 +40,21 @@ loom {
 
 dependencies {
     minecraft("com.mojang:minecraft:${property("minecraft_version")}")
-    modImplementation("net.fabricmc:fabric-loader:${property("loader_version")}")
-    mappings(loom.layered {
-        officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-${property("parchment_minecraft_version")}:${property("parchment_version")}@zip")
-    })
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_version")}")
+    implementation("net.fabricmc:fabric-loader:${property("loader_version")}")
 
-    include(modImplementation("me.lucko:fabric-permissions-api:${property("fabric_permissions_api_version")}")!!)
+    // Fabric API
+    implementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_version")}")
 
-    modImplementation("me.shedaniel.cloth:cloth-config-fabric:${property("cloth_config_version")}") {
-        exclude("net.fabricmc.fabric-api")
+    include(implementation("me.lucko:fabric-permissions-api:${property("fabric_permissions_api_version")}")!!)
+
+    implementation("me.shedaniel.cloth:cloth-config-fabric:${property("cloth_config_version")}") {
+        exclude(group = "net.fabricmc.fabric-api")
     }
 
-    modImplementation("com.terraformersmc:modmenu:${property("modmenu_version")}")
+    implementation("com.terraformersmc:modmenu:${property("modmenu_version")}")
+
+    include(implementation("io.github.llamalad7:mixinextras-fabric:${property("mixinextras_version")}")!!)
+    annotationProcessor("io.github.llamalad7:mixinextras-fabric:${property("mixinextras_version")}")
 }
 
 tasks {
@@ -74,7 +74,5 @@ tasks {
         from("../LICENSE")
     }
 
-    remapJar {
-        archiveVersion = getByName<Jar>("jar").archiveVersion
-    }
+
 }

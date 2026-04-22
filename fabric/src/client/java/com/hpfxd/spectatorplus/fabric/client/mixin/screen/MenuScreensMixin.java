@@ -50,18 +50,28 @@ public abstract class MenuScreensMixin {
 
                         // if no inventory could be created, we close the inventory
                     } else {
-                        final Inventory inventory;
-                        if (hasInventory) {
-                            inventory = ScreenSyncController.syncedInventory;
+                        // Handle container screens
+                        if (ClientSyncController.syncData.screen.containerType != null) {
+                            // Open container screen with proper type and size
+                            ScreenSyncController.openContainerScreen(mc,
+                                ClientSyncController.syncData.screen.containerType,
+                                ClientSyncController.syncData.screen.containerSize);
+                            return;
                         } else {
-                            inventory = mc.player.getInventory();
+                            // Fallback to original screen creation for unknown container types
+                            final Inventory inventory;
+                            if (hasInventory) {
+                                inventory = ScreenSyncController.syncedInventory;
+                            } else {
+                                inventory = mc.player.getInventory();
+                            }
+
+                            final M menu = type.create(windowId, inventory);
+                            final S screen = screenConstructor.create(menu, inventory, title);
+
+                            ScreenSyncController.handleNewSyncedScreen(mc, screen);
+                            return;
                         }
-
-                        final M menu = type.create(windowId, inventory);
-                        final S screen = screenConstructor.create(menu, inventory, title);
-
-                        ScreenSyncController.handleNewSyncedScreen(mc, screen);
-                        return;
                     }
                 }
             }

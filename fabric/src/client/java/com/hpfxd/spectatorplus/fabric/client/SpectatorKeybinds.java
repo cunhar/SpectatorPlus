@@ -5,7 +5,7 @@ import com.hpfxd.spectatorplus.fabric.client.mixin.PlayerMenuItemAccessor;
 import com.hpfxd.spectatorplus.fabric.client.mixin.SpectatorGuiAccessor;
 import com.hpfxd.spectatorplus.fabric.client.mixin.SpectatorMenuAccessor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.Util;
 import net.minecraft.client.KeyMapping;
@@ -37,19 +37,19 @@ public class SpectatorKeybinds {
     private static UUID targetCursorId;
 
     public static void init() {
-        CLOSEST_PLAYER = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        CLOSEST_PLAYER = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.spectatorplus.closestPlayer",
                 GLFW.GLFW_KEY_UP,
                 KeyMapping.Category.MISC
         ));
 
-        NEXT_PLAYER = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        NEXT_PLAYER = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.spectatorplus.nextPlayer",
                 GLFW.GLFW_KEY_RIGHT,
                 KeyMapping.Category.MISC
         ));
 
-        PREVIOUS_PLAYER = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        PREVIOUS_PLAYER = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.spectatorplus.previousPlayer",
                 GLFW.GLFW_KEY_LEFT,
                 KeyMapping.Category.MISC
@@ -65,10 +65,10 @@ public class SpectatorKeybinds {
 
                 if (nearest != null) {
                     setTarget(mc, nearest.getUUID());
-                    mc.player.displayClientMessage(Component.translatable("spectatorplus.target.now-spectating", Component.empty().append(nearest.getDisplayName())
-                            .withStyle(ChatFormatting.WHITE)).withStyle(ChatFormatting.GRAY), true);
+                    mc.player.sendOverlayMessage(Component.translatable("spectatorplus.target.now-spectating", Component.empty().append(nearest.getDisplayName())
+                            .withStyle(ChatFormatting.WHITE)).withStyle(ChatFormatting.GRAY));
                 } else {
-                    mc.player.displayClientMessage(Component.translatable("spectatorplus.target.no-closest-player").withStyle(ChatFormatting.RED), true);
+                    mc.player.sendOverlayMessage(Component.translatable("spectatorplus.target.no-closest-player").withStyle(ChatFormatting.RED));
                 }
             }
 
@@ -87,10 +87,10 @@ public class SpectatorKeybinds {
 
         if (target != null && !target.getProfile().id().equals(mc.getCameraEntity().getUUID())) {
             setTarget(mc, target.getProfile().id());
-            mc.player.displayClientMessage(Component.translatable("spectatorplus.target.now-spectating", Component.empty().append(mc.gui.getTabList().getNameForDisplay(target))
-                    .withStyle(ChatFormatting.WHITE)).withStyle(ChatFormatting.GRAY), true);
+            mc.player.sendOverlayMessage(Component.translatable("spectatorplus.target.now-spectating", Component.empty().append(mc.gui.getTabList().getNameForDisplay(target))
+                    .withStyle(ChatFormatting.WHITE)).withStyle(ChatFormatting.GRAY));
         } else {
-            mc.player.displayClientMessage(Component.translatable("spectatorplus.target.no-player").withStyle(ChatFormatting.RED), true);
+            mc.player.sendOverlayMessage(Component.translatable("spectatorplus.target.no-player").withStyle(ChatFormatting.RED));
         }
     }
 

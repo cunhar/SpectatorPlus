@@ -28,7 +28,7 @@ public class ClientSyncData {
         this.playerId = playerId;
     }
 
-    public void setScreen() {
+    public void createScreenIfNull() {
         if (this.screen == null) {
             this.screen = new ScreenSyncData();
         }

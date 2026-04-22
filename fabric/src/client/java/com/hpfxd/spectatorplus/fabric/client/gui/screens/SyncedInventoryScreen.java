@@ -1,8 +1,8 @@
 package com.hpfxd.spectatorplus.fabric.client.gui.screens;
 
-import com.hpfxd.spectatorplus.fabric.client.mixin.InventoryAccessor;
 import com.hpfxd.spectatorplus.fabric.client.mixin.screen.AbstractRecipeBookScreenAccessor;
 import com.hpfxd.spectatorplus.fabric.client.mixin.screen.ImageButtonAccessor;
+import com.hpfxd.spectatorplus.fabric.client.sync.ClientSyncController;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.WidgetSprites;
@@ -10,7 +10,6 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
-import net.minecraft.world.entity.EntityEquipment;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 
@@ -33,15 +32,17 @@ public class SyncedInventoryScreen extends InventoryScreen {
     }
 
     private void syncOtherItems() {
-        final SyncedInventoryMenu menu = (SyncedInventoryMenu) this.menu;
-        final Inventory fakeInventory = menu.getInventory();
+        // If the mixin worked correctly, this.menu should be a SyncedInventoryMenu
+        if (this.menu instanceof SyncedInventoryMenu syncedMenu) {
+            final Inventory inventory = syncedMenu.getInventory();
 
-        // Use synced inventory data for all slots (main, armor, offhand)
-        var syncData = com.hpfxd.spectatorplus.fabric.client.sync.ClientSyncController.syncData;
-        if (syncData != null && syncData.screen != null && syncData.screen.inventoryItems != null) {
-            var items = syncData.screen.inventoryItems;
-            for (int i = 0; i < items.size(); i++) {
-                fakeInventory.setItem(i, items.get(i));
+            // Use synced inventory data for all slots (main, armor, offhand)
+            var syncData = ClientSyncController.syncData;
+            if (syncData != null && syncData.screen != null && syncData.screen.inventoryItems != null) {
+                var items = syncData.screen.inventoryItems;
+                for (int i = 0; i < items.size() && i < 41; i++) {
+                    inventory.setItem(i, items.get(i));
+                }
             }
         }
     }
