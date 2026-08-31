@@ -1,6 +1,9 @@
 package com.hpfxd.spectatorplus.fabric.client.mixin;
 
 import com.hpfxd.spectatorplus.fabric.client.SpectatorClientMod;
+import com.hpfxd.spectatorplus.fabric.client.config.ClientConfig;
+import com.hpfxd.spectatorplus.fabric.client.gui.screens.SpectatorArmorHudRenderer;
+import com.hpfxd.spectatorplus.fabric.client.gui.screens.SpectatorEffectsHudRenderer;
 import com.hpfxd.spectatorplus.fabric.client.sync.ClientSyncController;
 import com.hpfxd.spectatorplus.fabric.client.util.SpecUtil;
 import com.hpfxd.spectatorplus.fabric.sync.SyncedEffect;
@@ -63,21 +66,6 @@ public abstract class GuiMixin {
     @Shadow
     private void extractItemHotbar(GuiGraphicsExtractor guiGraphicsExtractor, DeltaTracker deltaTracker) {}
 
-    // Use correct Identifiers for vanilla empty armor slot icons from the GUI atlas
-    private static final Identifier EMPTY_ARMOR_SLOT_HELMET = Identifier.withDefaultNamespace("container/slot/helmet");
-    private static final Identifier EMPTY_ARMOR_SLOT_CHESTPLATE = Identifier
-            .withDefaultNamespace("container/slot/chestplate");
-    private static final Identifier EMPTY_ARMOR_SLOT_LEGGINGS = Identifier
-            .withDefaultNamespace("container/slot/leggings");
-    private static final Identifier EMPTY_ARMOR_SLOT_BOOTS = Identifier.withDefaultNamespace("container/slot/boots");
-    private static final Identifier EFFECT_BACKGROUND_AMBIENT_SPRITE = Identifier
-            .withDefaultNamespace("hud/effect_background_ambient");
-    private static final Identifier EFFECT_BACKGROUND_SPRITE = Identifier.withDefaultNamespace("hud/effect_background");
-
-    private static final Identifier[] TEXTURE_EMPTY_SLOTS = new Identifier[] {
-            EMPTY_ARMOR_SLOT_BOOTS, EMPTY_ARMOR_SLOT_LEGGINGS, EMPTY_ARMOR_SLOT_CHESTPLATE, EMPTY_ARMOR_SLOT_HELMET
-    };
-
     @Inject(method = "extractEffects(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/DeltaTracker;)V", at = @At("HEAD"), cancellable = true)
     private void spectatorplus$cancelRenderEffects(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker,
             CallbackInfo ci) {
@@ -136,121 +124,8 @@ public abstract class GuiMixin {
                     this.extractItemHotbar(guiGraphics, deltaTracker);
                 }
 
-                // Render all spectatee's armor in the top right: helmet, chestplate, leggings,
-                // boots
-                if (ClientSyncController.syncData != null && ClientSyncController.syncData.armorItems != null
-                        && SpectatorClientMod.config.renderArmor) {
-                    int spacing = 1; // vertical spacing between items
-                    int itemWidth = 16; // standard item icon width
-                    int itemHeight = 16; // standard item icon height
-                    int baseY = 2;
-                    int baseX = this.minecraft.getWindow().getGuiScaledWidth() - itemWidth - 4;
-                    // Armor order: helmet, chestplate, leggings, boots (reverse to boots, leggings,
-                    // chestplate, helmet)
-                    EquipmentSlot[] slots = { EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS,
-                            EquipmentSlot.FEET };
-                    for (int i = 0; i < slots.length; i++) {
-                        int idx = ClientSyncController.syncData.armorItems.size() - 1 - i;
-                        ItemStack armorStack = idx >= 0 && idx < ClientSyncController.syncData.armorItems.size()
-                                ? ClientSyncController.syncData.armorItems.get(idx)
-                                : ItemStack.EMPTY;
-                        int y = baseY + i * (itemHeight + spacing);
-                        boolean isAir = armorStack == null || armorStack.isEmpty()
-                                || armorStack.getItem() == net.minecraft.world.item.Items.AIR;
-                        if (isAir) {
-                            // Show empty slot icon if no item
-                            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, TEXTURE_EMPTY_SLOTS[idx], baseX, y,
-                                    itemWidth, itemHeight);
-                        } else {
-                            // Show item icon if present
-                            guiGraphics.item(armorStack, baseX, y);
-                            // Draw durability % if item is damageable
-                            if (armorStack.isDamageableItem() && armorStack.getMaxDamage() > 0) {
-                                int durability = armorStack.getMaxDamage() - armorStack.getDamageValue();
-                                int percent = (int) ((durability * 100.0) / armorStack.getMaxDamage());
-                                String numText = String.valueOf(percent);
-                                String percentChar = "%";
-                                int numColor;
-                                if (percent == 100) {
-                                    numColor = 0xFF00FF00; // lime
-                                } else if (percent < 10) {
-                                    numColor = 0xFFFF0000; // red
-                                } else if (percent < 25) {
-                                    numColor = 0xFFFFA500; // orange
-                                } else {
-                                    numColor = 0xFFFFFFFF; // white
-                                }
-                                // Right-align the text to the left of the icon
-                                int numTextWidth = this.minecraft.font.width(numText);
-                                int percentTextWidth = this.minecraft.font.width(percentChar);
-                                int textWidth = numTextWidth + percentTextWidth;
-                                int textX = baseX - spacing - textWidth; // right-aligned to the left of the item
-                                int textY = y + 4; // vertically centered
-                                // Draw numeric part
-                                guiGraphics.text(this.minecraft.font, numText, textX, textY, numColor, true);
-                                // Draw '%' in white
-                                guiGraphics.text(this.minecraft.font, percentChar, textX + numTextWidth, textY,
-                                        0xFFFFFFFF, true);
-                            }
-                        }
-                    }
-
-                    int effectBaseY = baseY + slots.length * (itemHeight + spacing) + spacing; // start below armor
-
-                    // Render all active effect icons down the right side below armor
-                    if (SpectatorClientMod.config.renderEffects && ClientSyncController.syncData.effects != null
-                            && !ClientSyncController.syncData.effects.isEmpty()) {
-                        int effectIndex = 0;
-                        for (var effectInstance : ClientSyncController.syncData.effects) {
-                            int y = effectBaseY + effectIndex * (itemWidth + spacing);
-
-                            // Draw vanilla effect background
-                            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, EFFECT_BACKGROUND_SPRITE, baseX, y,
-                                    itemWidth, itemHeight);
-
-                            Identifier effectIcon = getEffectIcon(effectInstance.effectKey);
-                            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, effectIcon, baseX + 2, y + 2,
-                                    itemWidth - 4, itemHeight - 4);
-
-                            // Draw effect level as a small white number on the top right of the icon
-                            int level = effectInstance.amplifier + 1;
-                            String levelText = String.valueOf(level);
-                            int levelTextWidth = this.minecraft.font.width(levelText);
-                            int levelTextX = baseX + itemWidth - (int) (levelTextWidth * 0.4F) - 3; // right-align
-                                                                                                    // inside top-right
-                                                                                                    // corner
-                            int levelTextY = y + 2;
-                            guiGraphics.pose().pushMatrix();
-                            guiGraphics.pose().scale(0.5F, 0.5F);
-                            guiGraphics.text(this.minecraft.font, levelText, (int) (levelTextX / 0.5F),
-                                    (int) (levelTextY / 0.5F), 0xFFFFFFFF, true);
-                            guiGraphics.pose().popMatrix();
-
-                            // Draw duration bar (1px wide) to the left of the effect icon, color changes
-                            // with percent
-                            int duration = effectInstance.duration;
-                            int maxDuration = 3600; // 3 minutes, adjust as needed
-                            float percent = maxDuration > 0 ? (duration / (float) maxDuration) : 1.0F;
-                            int maxBarHeight = itemHeight - 2;
-                            int barHeight = Math.min(maxBarHeight, (int) (maxBarHeight * percent));
-                            int barX = baseX + 1; // 1px left of icon
-                            int barY = y + itemHeight - 1 - barHeight; // 1px up from bottom
-                            int barColor;
-                            if (percent > 0.20F) {
-                                barColor = 0xFF00FF00; // green
-                            } else if (percent > 0.05F) {
-                                barColor = 0xFFFFA500; // orange
-                            } else {
-                                barColor = 0xFFFF0000; // red
-                            }
-                            if (barHeight > 0) {
-                                guiGraphics.fill(barX, barY, barX + 2, barY + barHeight, barColor);
-                            }
-
-                            effectIndex++;
-                        }
-                    }
-                }
+                SpectatorArmorHudRenderer.render(this.minecraft, guiGraphics, deltaTracker);
+                SpectatorEffectsHudRenderer.render(this.minecraft, guiGraphics, deltaTracker);
             }
         }
     }
@@ -402,19 +277,4 @@ public abstract class GuiMixin {
         }
         return instance;
     }
-
-    // Map EffectType to vanilla effect icon Identifier
-    private static Identifier getEffectIcon(String effectKey) {
-        // If effectKey contains a namespace (e.g., minecraft:nausea), strip it
-        String key = effectKey;
-        int colonIdx = key.indexOf(":");
-        if (colonIdx != -1) {
-            key = key.substring(colonIdx + 1);
-        }
-        // Vanilla effect icons are in the GUI atlas as effect/<effectKey>
-        // The effectKey should be lowercase, matching the registry name
-        return Identifier.withDefaultNamespace("mob_effect/" + key.toLowerCase());
-    }
-
-
 }

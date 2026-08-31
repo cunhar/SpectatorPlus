@@ -111,6 +111,104 @@ public class ClothConfigIntegration {
                                 .build());
 
                 category.addEntry(entryBuilder
+                                .startEnumSelector(
+                                                Component.translatable(
+                                                                "gui.spectatorplus.config.client.hudDirection.name"),
+                                                ClientConfig.HudDirection.class,
+                                                config.hudDirection)
+                                .setEnumNameProvider(val -> Component.literal(
+                                                val == ClientConfig.HudDirection.UP ? "Up (Bottom-Right)"
+                                                                : "Down (Top-Right)"))
+                                .setTooltip(Component
+                                                .translatable("gui.spectatorplus.config.client.hudDirection.tooltip"))
+                                .setSaveConsumer(val -> config.hudDirection = val)
+                                .setDefaultValue(defaults.hudDirection)
+                                .build());
+
+                category.addEntry(entryBuilder
+                                .startIntField(
+                                                Component.translatable(
+                                                                "gui.spectatorplus.config.client.armorXOffset.name"),
+                                                config.armorXOffset)
+                                .setTooltip(Component
+                                                .translatable("gui.spectatorplus.config.client.armorXOffset.tooltip"))
+                                .setSaveConsumer(val -> config.armorXOffset = val)
+                                .setDefaultValue(defaults.armorXOffset)
+                                .build());
+
+                category.addEntry(entryBuilder
+                                .startIntField(
+                                                Component.translatable(
+                                                                "gui.spectatorplus.config.client.armorYOffset.name"),
+                                                config.armorYOffset)
+                                .setTooltip(Component
+                                                .translatable("gui.spectatorplus.config.client.armorYOffset.tooltip"))
+                                .setSaveConsumer(val -> config.armorYOffset = val)
+                                .setDefaultValue(defaults.armorYOffset)
+                                .build());
+
+                category.addEntry(entryBuilder
+                                .startIntField(
+                                                Component.translatable(
+                                                                "gui.spectatorplus.config.client.effectsXOffset.name"),
+                                                config.effectsXOffset)
+                                .setTooltip(Component
+                                                .translatable("gui.spectatorplus.config.client.effectsXOffset.tooltip"))
+                                .setSaveConsumer(val -> config.effectsXOffset = val)
+                                .setDefaultValue(defaults.effectsXOffset)
+                                .build());
+
+                category.addEntry(entryBuilder
+                                .startIntField(
+                                                Component.translatable(
+                                                                "gui.spectatorplus.config.client.effectsYOffset.name"),
+                                                config.effectsYOffset)
+                                .setTooltip(Component
+                                                .translatable("gui.spectatorplus.config.client.effectsYOffset.tooltip"))
+                                .setSaveConsumer(val -> config.effectsYOffset = val)
+                                .setDefaultValue(defaults.effectsYOffset)
+                                .build());
+
+                category.addEntry(entryBuilder
+                                .startIntSlider(
+                                                Component.translatable(
+                                                                "gui.spectatorplus.config.client.armorScalePercent.name"),
+                                                config.armorScalePercent,
+                                                25,
+                                                300)
+                                .setTextGetter(val -> Component.literal(val + "%"))
+                                .setTooltip(Component
+                                                .translatable("gui.spectatorplus.config.client.armorScalePercent.tooltip"))
+                                .setSaveConsumer(val -> config.armorScalePercent = val)
+                                .setDefaultValue(defaults.armorScalePercent)
+                                .build());
+
+                category.addEntry(entryBuilder
+                                .startIntSlider(
+                                                Component.translatable(
+                                                                "gui.spectatorplus.config.client.effectsScalePercent.name"),
+                                                config.effectsScalePercent,
+                                                25,
+                                                300)
+                                .setTextGetter(val -> Component.literal(val + "%"))
+                                .setTooltip(Component
+                                                .translatable("gui.spectatorplus.config.client.effectsScalePercent.tooltip"))
+                                .setSaveConsumer(val -> config.effectsScalePercent = val)
+                                .setDefaultValue(defaults.effectsScalePercent)
+                                .build());
+
+                category.addEntry(entryBuilder
+                                .startBooleanToggle(
+                                                Component.translatable(
+                                                                "gui.spectatorplus.config.client.showMenuButton.name"),
+                                                config.showMenuButton)
+                                .setTooltip(Component
+                                                .translatable("gui.spectatorplus.config.client.showMenuButton.tooltip"))
+                                .setSaveConsumer(val -> config.showMenuButton = val)
+                                .setDefaultValue(defaults.showMenuButton)
+                                .build());
+
+                category.addEntry(entryBuilder
                                 .startBooleanToggle(
                                                 Component.translatable(
                                                                 "gui.spectatorplus.config.client.showSpectators.name"),
