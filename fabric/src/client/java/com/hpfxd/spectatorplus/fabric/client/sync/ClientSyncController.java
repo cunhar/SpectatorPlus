@@ -93,8 +93,10 @@ public class ClientSyncController {
     public static void setSyncData(UUID playerId) {
         if (playerId == null) {
             syncData = null;
+            ScreenSyncController.reset();
         } else if (syncData == null || !syncData.playerId.equals(playerId)) {
             syncData = new ClientSyncData(playerId);
+            ScreenSyncController.reset();
         }
     }
 }

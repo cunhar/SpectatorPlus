@@ -69,9 +69,11 @@ public abstract class GuiMixin {
     @Inject(method = "extractEffects(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/DeltaTracker;)V", at = @At("HEAD"), cancellable = true)
     private void spectatorplus$cancelRenderEffects(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker,
             CallbackInfo ci) {
-        final AbstractClientPlayer spectated = SpecUtil.getCameraPlayer(this.minecraft);
-        if (spectated != null) {
+        if (SpectatorClientMod.config.renderEffects) {
             ci.cancel();
+            if (!this.isHidden() && !this.getSpectatorGui().isMenuActive()) {
+                SpectatorEffectsHudRenderer.render(this.minecraft, guiGraphics, deltaTracker);
+            }
         }
     }
 
@@ -111,6 +113,9 @@ public abstract class GuiMixin {
         return instance.getPercentFrozen();
     }
 
+    @Shadow
+    protected abstract void extractSelectedItemName(GuiGraphicsExtractor guiGraphicsExtractor);
+
     @Inject(method = "extractHotbarAndDecorations(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/DeltaTracker;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/spectator/SpectatorGui;extractHotbar(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V"))
     private void spectatorplus$renderHotbar(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci,
             @Share("spectated") LocalRef<AbstractClientPlayer> spectatedRef) {
@@ -122,10 +127,10 @@ public abstract class GuiMixin {
                 if (ClientSyncController.syncData != null && ClientSyncController.syncData.selectedHotbarSlot != -1
                         && !spectated.isSpectator() && SpectatorClientMod.config.renderHotbar) {
                     this.extractItemHotbar(guiGraphics, deltaTracker);
+                    this.extractSelectedItemName(guiGraphics);
                 }
 
                 SpectatorArmorHudRenderer.render(this.minecraft, guiGraphics, deltaTracker);
-                SpectatorEffectsHudRenderer.render(this.minecraft, guiGraphics, deltaTracker);
             }
         }
     }
@@ -270,11 +275,40 @@ public abstract class GuiMixin {
         return instance.experienceLevel;
     }
 
-    @ModifyReceiver(method = "tick()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;getSelectedItem()Lnet/minecraft/world/item/ItemStack;"))
-    private Inventory spectatorplus$modifyTooltipTick(Inventory instance) {
-        if (this.minecraft.getCameraEntity() instanceof Player player) {
-            return player.getInventory();
+    @Redirect(method = "tick()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;getSelectedItem()Lnet/minecraft/world/item/ItemStack;"))
+    private ItemStack spectatorplus$modifyTooltipTick(Inventory instance) {
+        if (ClientSyncController.syncData != null && ClientSyncController.syncData.selectedHotbarSlot != -1
+                && SpecUtil.getCameraPlayer(this.minecraft) != null) {
+            return ClientSyncController.syncData.hotbarItems.get(ClientSyncController.syncData.selectedHotbarSlot);
         }
-        return instance;
+        if (this.minecraft.getCameraEntity() instanceof Player player) {
+            return player.getInventory().getSelectedItem();
+        }
+        return instance.getSelectedItem();
+    }
+
+    @Shadow
+    private int toolHighlightTimer;
+
+    @Shadow
+    private ItemStack lastToolHighlight;
+
+    @Inject(method = "tick()V", at = @At("RETURN"))
+    private void spectatorplus$manualTooltipTick(CallbackInfo ci) {
+        if (!this.getSpectatorGui().isMenuActive()
+                && ClientSyncController.syncData != null && ClientSyncController.syncData.selectedHotbarSlot != -1
+                && SpecUtil.getCameraPlayer(this.minecraft) != null) {
+            ItemStack currentItem = ClientSyncController.syncData.hotbarItems.get(ClientSyncController.syncData.selectedHotbarSlot);
+            if (currentItem.isEmpty()) {
+                this.toolHighlightTimer = 0;
+            } else if (!this.lastToolHighlight.isEmpty() && currentItem.is(this.lastToolHighlight.getItem()) && currentItem.getHoverName().equals(this.lastToolHighlight.getHoverName())) {
+                if (this.toolHighlightTimer > 0) {
+                    this.toolHighlightTimer--;
+                }
+            } else {
+                this.toolHighlightTimer = 40;
+            }
+            this.lastToolHighlight = currentItem;
+        }
     }
 }

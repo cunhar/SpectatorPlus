@@ -3,11 +3,21 @@ package com.hpfxd.spectatorplus.fabric.client.gui.screens;
 import com.hpfxd.spectatorplus.fabric.client.SpectatorClientMod;
 import com.hpfxd.spectatorplus.fabric.client.config.ClientConfig;
 import com.hpfxd.spectatorplus.fabric.client.sync.ClientSyncController;
+import com.hpfxd.spectatorplus.fabric.client.util.SpecUtil;
+import com.hpfxd.spectatorplus.fabric.sync.SyncedEffect;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.effect.MobEffectInstance;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public class SpectatorEffectsHudRenderer {
     private static final Identifier EFFECT_BACKGROUND_SPRITE = Identifier.withDefaultNamespace("hud/effect_background");
@@ -17,14 +27,65 @@ public class SpectatorEffectsHudRenderer {
     public static final int SPACING = 1;
     public static final int PADDING = 4;
 
-    public static boolean shouldRender() {
-        return SpectatorClientMod.config.renderEffects && ClientSyncController.syncData != null
-                && ClientSyncController.syncData.effects != null
-                && !ClientSyncController.syncData.effects.isEmpty();
+    public static List<SyncedEffect> getEffectsToRender(Minecraft minecraft) {
+        if (!SpectatorClientMod.config.renderEffects) {
+            return Collections.emptyList();
+        }
+
+        final AbstractClientPlayer spectated = SpecUtil.getCameraPlayer(minecraft);
+        if (spectated != null) {
+            if (ClientSyncController.syncData != null && ClientSyncController.syncData.effects != null) {
+                return ClientSyncController.syncData.effects;
+            }
+            return Collections.emptyList();
+        }
+
+        if (minecraft.player != null) {
+            var activeEffects = minecraft.player.getActiveEffects();
+            if (activeEffects.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            List<SyncedEffect> list = new ArrayList<>(activeEffects.size());
+            for (MobEffectInstance inst : activeEffects) {
+                String effectKey = BuiltInRegistries.MOB_EFFECT.getKey(inst.getEffect().value()).toString();
+                list.add(new SyncedEffect(effectKey, inst.getAmplifier(), inst.getDuration()));
+            }
+            return list;
+        }
+
+        return Collections.emptyList();
+    }
+
+    public static boolean shouldRender(Minecraft minecraft) {
+        if (!SpectatorClientMod.config.renderEffects) {
+            return false;
+        }
+
+        final AbstractClientPlayer spectated = SpecUtil.getCameraPlayer(minecraft);
+        if (spectated != null) {
+            return ClientSyncController.syncData != null && ClientSyncController.syncData.effects != null
+                    && !ClientSyncController.syncData.effects.isEmpty();
+        }
+
+        return minecraft.player != null && !minecraft.player.getActiveEffects().isEmpty();
     }
 
     public static void render(Minecraft minecraft, GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker) {
-        if (!shouldRender()) {
+        if (!SpectatorClientMod.config.renderEffects) {
+            return;
+        }
+
+        final AbstractClientPlayer spectated = SpecUtil.getCameraPlayer(minecraft);
+        final List<SyncedEffect> syncedEffects = (spectated != null && ClientSyncController.syncData != null)
+                ? ClientSyncController.syncData.effects
+                : null;
+        final Collection<MobEffectInstance> localEffects = (spectated == null && minecraft.player != null)
+                ? minecraft.player.getActiveEffects()
+                : null;
+
+        int totalEffects = (syncedEffects != null) ? syncedEffects.size() : ((localEffects != null) ? localEffects.size() : 0);
+        if (totalEffects == 0) {
             return;
         }
 
@@ -40,31 +101,30 @@ public class SpectatorEffectsHudRenderer {
         guiGraphics.pose().pushMatrix();
         guiGraphics.pose().scale(scale, scale);
 
-        int totalEffects = ClientSyncController.syncData.effects.size();
+        int effectAnchorScreenY = screenHeight - PADDING - SpectatorClientMod.config.effectsYOffset;
+        int effectAnchorVirtualY = (int) (effectAnchorScreenY / scale);
+        int effectTopScreenY = PADDING + SpectatorClientMod.config.effectsYOffset;
+        int effectTopVirtualY = (int) (effectTopScreenY / scale);
 
-        if (isUp) {
-            // Anchor independently at BOTTOM-RIGHT, stacking UPWARDS
-            int effectAnchorScreenY = screenHeight - PADDING - SpectatorClientMod.config.effectsYOffset;
-            int effectAnchorVirtualY = (int) (effectAnchorScreenY / scale);
+        int effectIndex = 0;
+        if (syncedEffects != null) {
+            for (SyncedEffect effect : syncedEffects) {
+                int y = isUp
+                        ? effectAnchorVirtualY - ITEM_HEIGHT - effectIndex * (ITEM_HEIGHT + SPACING)
+                        : effectTopVirtualY + effectIndex * (ITEM_HEIGHT + SPACING);
 
-            for (int effectIndex = 0; effectIndex < totalEffects; effectIndex++) {
-                var effectInstance = ClientSyncController.syncData.effects.get(effectIndex);
-                // Effect 0 is closest to bottom anchor, effect 1 is above it, etc.
-                int y = effectAnchorVirtualY - ITEM_HEIGHT - effectIndex * (ITEM_HEIGHT + SPACING);
-
-                renderEffectSlot(minecraft, guiGraphics, effectInstance, baseX, y);
+                renderEffectSlot(minecraft, guiGraphics, effect.effectKey, effect.amplifier, effect.duration, baseX, y);
+                effectIndex++;
             }
-        } else {
-            // Anchor independently at TOP-RIGHT, stacking DOWNWARDS
-            int effectTopScreenY = PADDING + SpectatorClientMod.config.effectsYOffset;
-            int effectTopVirtualY = (int) (effectTopScreenY / scale);
+        } else if (localEffects != null) {
+            for (MobEffectInstance inst : localEffects) {
+                int y = isUp
+                        ? effectAnchorVirtualY - ITEM_HEIGHT - effectIndex * (ITEM_HEIGHT + SPACING)
+                        : effectTopVirtualY + effectIndex * (ITEM_HEIGHT + SPACING);
 
-            for (int effectIndex = 0; effectIndex < totalEffects; effectIndex++) {
-                var effectInstance = ClientSyncController.syncData.effects.get(effectIndex);
-                // Effect 0 is at the top anchor, effect 1 is below it, etc.
-                int y = effectTopVirtualY + effectIndex * (ITEM_HEIGHT + SPACING);
-
-                renderEffectSlot(minecraft, guiGraphics, effectInstance, baseX, y);
+                String effectKey = BuiltInRegistries.MOB_EFFECT.getKey(inst.getEffect().value()).toString();
+                renderEffectSlot(minecraft, guiGraphics, effectKey, inst.getAmplifier(), inst.getDuration(), baseX, y);
+                effectIndex++;
             }
         }
 
@@ -72,17 +132,17 @@ public class SpectatorEffectsHudRenderer {
     }
 
     private static void renderEffectSlot(Minecraft minecraft, GuiGraphicsExtractor guiGraphics,
-            com.hpfxd.spectatorplus.fabric.sync.SyncedEffect effectInstance, int baseX, int y) {
+            String effectKey, int amplifier, int duration, int baseX, int y) {
         // Draw vanilla effect background
         guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, EFFECT_BACKGROUND_SPRITE, baseX, y,
                 ITEM_WIDTH, ITEM_HEIGHT);
 
-        Identifier effectIcon = getEffectIcon(effectInstance.effectKey);
+        Identifier effectIcon = getEffectIcon(effectKey);
         guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, effectIcon, baseX + 2, y + 2,
                 ITEM_WIDTH - 4, ITEM_HEIGHT - 4);
 
         // Draw effect level as a small white number on the top right of the icon
-        int level = effectInstance.amplifier + 1;
+        int level = amplifier + 1;
         String levelText = String.valueOf(level);
         int levelTextWidth = minecraft.font.width(levelText);
         int levelTextX = baseX + ITEM_WIDTH - (int) (levelTextWidth * 0.4F) - 3;
@@ -94,7 +154,6 @@ public class SpectatorEffectsHudRenderer {
         guiGraphics.pose().popMatrix();
 
         // Draw duration bar (1px wide) to the left of the effect icon, color changes with percent
-        int duration = effectInstance.duration;
         int maxDuration = 3600;
         float percent = maxDuration > 0 ? (duration / (float) maxDuration) : 1.0F;
         int maxBarHeight = ITEM_HEIGHT - 2;

@@ -89,11 +89,18 @@ public class ScreenSyncController {
         syncData.screen.cursorItemSlot = packet.originSlot();
     }
 
+    public static void reset() {
+        isPendingOpen = false;
+        syncedWindowId = Integer.MIN_VALUE;
+        syncedInventory = null;
+        syncedScreen = null;
+    }
+
     public static void closeSyncedInventory() {
         if (syncedScreen != null) {
             syncedScreen.onClose();
-            syncedInventory = null;
         }
+        reset();
     }
 
     public static void openPlayerInventory(Minecraft mc) {
@@ -109,18 +116,20 @@ public class ScreenSyncController {
         mc.gui.setScreen(screen);
 
         if (mc.gui.screen() != screen) {
-            syncedInventory = null;
-            syncData.screen = null;
+            reset();
+            if (syncData != null) {
+                syncData.screen = null;
+            }
             return;
         }
 
         syncedScreen = screen;
 
         ScreenEvents.remove(screen).register(s -> {
-            syncedScreen = null;
-            syncedInventory = null;
-            syncedWindowId = Integer.MIN_VALUE;
-            syncData.screen = null;
+            reset();
+            if (syncData != null) {
+                syncData.screen = null;
+            }
         });
     }
 
