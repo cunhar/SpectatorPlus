@@ -287,28 +287,12 @@ public abstract class GuiMixin {
         return instance.getSelectedItem();
     }
 
-    @Shadow
-    private int toolHighlightTimer;
-
-    @Shadow
-    private ItemStack lastToolHighlight;
-
-    @Inject(method = "tick()V", at = @At("RETURN"))
-    private void spectatorplus$manualTooltipTick(CallbackInfo ci) {
-        if (!this.getSpectatorGui().isMenuActive()
-                && ClientSyncController.syncData != null && ClientSyncController.syncData.selectedHotbarSlot != -1
-                && SpecUtil.getCameraPlayer(this.minecraft) != null) {
-            ItemStack currentItem = ClientSyncController.syncData.hotbarItems.get(ClientSyncController.syncData.selectedHotbarSlot);
-            if (currentItem.isEmpty()) {
-                this.toolHighlightTimer = 0;
-            } else if (!this.lastToolHighlight.isEmpty() && currentItem.is(this.lastToolHighlight.getItem()) && currentItem.getHoverName().equals(this.lastToolHighlight.getHoverName())) {
-                if (this.toolHighlightTimer > 0) {
-                    this.toolHighlightTimer--;
-                }
-            } else {
-                this.toolHighlightTimer = 40;
-            }
-            this.lastToolHighlight = currentItem;
+    @ModifyExpressionValue(method = "extractSelectedItemName(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;canHurtPlayer()Z"))
+    private boolean spectatorplus$moveHeldItemTooltipUp(boolean original) {
+        final AbstractClientPlayer spectated = SpecUtil.getCameraPlayer(this.minecraft);
+        if (spectated != null && !spectated.isCreative() && !spectated.isSpectator()) {
+            return true;
         }
+        return original;
     }
 }

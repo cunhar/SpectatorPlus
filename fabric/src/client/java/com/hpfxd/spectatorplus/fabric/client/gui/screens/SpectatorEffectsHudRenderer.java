@@ -131,6 +131,9 @@ public class SpectatorEffectsHudRenderer {
         guiGraphics.pose().popMatrix();
     }
 
+    private static final java.util.Map<String, Identifier> EFFECT_ICON_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final String[] LEVEL_STRINGS = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
+
     private static void renderEffectSlot(Minecraft minecraft, GuiGraphicsExtractor guiGraphics,
             String effectKey, int amplifier, int duration, int baseX, int y) {
         // Draw vanilla effect background
@@ -143,7 +146,7 @@ public class SpectatorEffectsHudRenderer {
 
         // Draw effect level as a small white number on the top right of the icon
         int level = amplifier + 1;
-        String levelText = String.valueOf(level);
+        String levelText = (level >= 0 && level < LEVEL_STRINGS.length) ? LEVEL_STRINGS[level] : String.valueOf(level);
         int levelTextWidth = minecraft.font.width(levelText);
         int levelTextX = baseX + ITEM_WIDTH - (int) (levelTextWidth * 0.4F) - 3;
         int levelTextY = y + 2;
@@ -174,11 +177,12 @@ public class SpectatorEffectsHudRenderer {
     }
 
     public static Identifier getEffectIcon(String effectKey) {
-        String key = effectKey;
-        int colonIdx = key.indexOf(":");
-        if (colonIdx != -1) {
-            key = key.substring(colonIdx + 1);
-        }
-        return Identifier.withDefaultNamespace("mob_effect/" + key.toLowerCase());
+        return EFFECT_ICON_CACHE.computeIfAbsent(effectKey, key -> {
+            int colonIdx = key.indexOf(":");
+            if (colonIdx != -1) {
+                key = key.substring(colonIdx + 1);
+            }
+            return Identifier.withDefaultNamespace("mob_effect/" + key.toLowerCase());
+        });
     }
 }
