@@ -108,6 +108,10 @@ public class SpectatorWorkarounds implements Listener {
             // we need to schedule the re-apply for a tick later, as the target is not actually tracked yet when
             // PlayerTrackEntityEvent is called.
             Bukkit.getScheduler().runTask(this.plugin, () -> {
+                if (!spectator.isOnline() || !target.isValid()) {
+                    return;
+                }
+
                 if (!this.cameraPacketFailed) {
                     try {
                         // attempt to send ClientboundSetCameraPacket directly to the spectator as that's all that is really

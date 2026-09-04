@@ -36,7 +36,7 @@ public class ExperienceSyncHandler implements Listener {
             final int old = this.playerExperience.put(player.getUniqueId(), current);
 
             if (current != old) {
-                this.plugin.getSyncController().broadcastPacketToSpectators(player, PERMISSION, new ClientboundExperienceSyncPacket(player.getUniqueId(), player.getExp(), current, player.getLevel()));
+                this.plugin.getSyncController().broadcastPacketToSpectators(player, PERMISSION, new ClientboundExperienceSyncPacket(player.getUniqueId(), player.getExp(), player.getExperiencePointsNeededForNextLevel(), player.getLevel()));
             }
         }
     }

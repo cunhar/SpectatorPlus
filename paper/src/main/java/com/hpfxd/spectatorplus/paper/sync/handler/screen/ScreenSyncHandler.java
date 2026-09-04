@@ -9,11 +9,13 @@ import com.hpfxd.spectatorplus.paper.sync.packet.ClientboundScreenSyncPacket;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -162,9 +164,19 @@ public class ScreenSyncHandler implements Listener {
             return;
         }
 
+        final Entity target = spectator.getSpectatorTarget();
+        UUID targetId = target != null ? target.getUniqueId() : null;
+        if (targetId == null && screen.getBottomInventory() != null && screen.getBottomInventory().getHolder() instanceof Entity holderEntity) {
+            targetId = holderEntity.getUniqueId();
+        }
+
+        if (targetId == null) {
+            return;
+        }
+
         this.screens.put(spectator.getUniqueId(), screen);
 
-        this.plugin.getSyncController().sendPacket(spectator, ClientboundScreenSyncPacket.of(spectator.getSpectatorTarget().getUniqueId(), screen.isSurvivalInventory(), screen.isRequestedByClient(), true));
+        this.plugin.getSyncController().sendPacket(spectator, ClientboundScreenSyncPacket.of(targetId, screen.isSurvivalInventory(), screen.isRequestedByClient(), true));
 
         if (spectator.hasPermission(INVENTORY_PERMISSION)) {
             if (screen.getBottomInventory() instanceof final PlayerInventory inventory) {
@@ -248,7 +260,12 @@ public class ScreenSyncHandler implements Listener {
 
             // Only open if the current view is not CRAFTING or CREATIVE
             if (view.getType() != InventoryType.CRAFTING && view.getType() != InventoryType.CREATIVE) {
-                Bukkit.getScheduler().runTask(this.plugin, () -> this.openSyncedContainer(spectator, view));
+                Bukkit.getScheduler().runTask(this.plugin, () -> {
+                    if (!spectator.isOnline() || !target.isOnline()) {
+                        return;
+                    }
+                    this.openSyncedContainer(spectator, view);
+                });
             }
         }
     }
@@ -277,7 +294,12 @@ public class ScreenSyncHandler implements Listener {
 
             switch (event.getAction()) {
                 case PICKUP_ALL, PICKUP_HALF, PICKUP_SOME, PICKUP_ONE, SWAP_WITH_CURSOR, COLLECT_TO_CURSOR, CLONE_STACK, HOTBAR_SWAP, DROP_ALL_CURSOR, DROP_ONE_CURSOR, PLACE_ALL, PLACE_SOME, PLACE_ONE -> {
-                    Bukkit.getScheduler().runTask(this.plugin, () -> this.updateCursor(player, event.getView(), slot, player.getItemOnCursor()));
+                    Bukkit.getScheduler().runTask(this.plugin, () -> {
+                        if (!player.isOnline()) {
+                            return;
+                        }
+                        this.updateCursor(player, event.getView(), slot, player.getItemOnCursor());
+                    });
                 }
             }
         }
@@ -286,6 +308,9 @@ public class ScreenSyncHandler implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDragMonitor(InventoryDragEvent event) {
         if (event.getWhoClicked() instanceof final Player player) {
+            if (event.getRawSlots().isEmpty()) {
+                return;
+            }
             final ItemStack cursor = event.getCursor() == null ? ItemStack.empty() : event.getCursor();
             this.updateCursor(player, event.getView(), event.getRawSlots().iterator().next(), cursor);
         }
@@ -308,6 +333,14 @@ public class ScreenSyncHandler implements Listener {
     public void onClick(InventoryDragEvent event) {
         if (this.isViewingSyncedScreen(event.getWhoClicked())) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        final SyncedScreen screen = this.screens.remove(event.getPlayer().getUniqueId());
+        if (screen != null) {
+            screen.close();
         }
     }
 }

@@ -49,6 +49,9 @@ public class EffectsSyncHandler implements Listener {
     public void onPotionEffectChange(EntityPotionEffectEvent event) {
         if (event.getEntity() instanceof Player player) {
             Bukkit.getScheduler().runTask(this.plugin, () -> {
+                if (!player.isOnline()) {
+                    return;
+                }
                 List<SyncedEffect> effects = getSyncedEffects(player);
                 this.plugin.getSyncController().broadcastPacketToSpectators(player, PERMISSION,
                         new ClientboundEffectsSyncPacket(player.getUniqueId(), effects));

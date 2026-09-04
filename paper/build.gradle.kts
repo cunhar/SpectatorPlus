@@ -16,9 +16,20 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:${property("paper_version")}")
 
     implementation("xyz.jpenilla:reflection-remapper:${property("reflection_remapper_version")}")
+
+    testImplementation("io.papermc.paper:paper-api:${property("paper_version")}")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks {
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
+    }
+
     processResources {
         inputs.property("version", project.version)
         filesMatching("paper-plugin.yml") {

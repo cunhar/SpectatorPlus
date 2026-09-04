@@ -57,6 +57,9 @@ public final class SerializationUtil {
 
     public static String readString(ByteArrayDataInput in) {
         int length = readVarInt(in);
+        if (length < 0 || length > 32767) {
+            throw new IllegalArgumentException("String length out of bounds: " + length);
+        }
         byte[] bytes = new byte[length];
         in.readFully(bytes);
         return new String(bytes, java.nio.charset.StandardCharsets.UTF_8);

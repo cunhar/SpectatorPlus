@@ -25,12 +25,21 @@ public sealed class ReplicaSyncedContainer extends SyncedContainer permits Craft
 
     @Override
     public void update() {
+        if (this.spectatorView == null) {
+            return;
+        }
+
         // Sync all item slots
         final Inventory targetInventory = this.targetView.getTopInventory();
         final Inventory spectatorInventory = this.spectatorView.getTopInventory();
+        if (targetInventory == null || spectatorInventory == null) {
+            return;
+        }
+
         // Cannot simply do spectatorInventory.setContents(targetInventory.getContents()) as that will only get items
         // from the primary inventory in some menu types (e.g. stonecutter)
-        for (int slot = 0; slot < targetInventory.getSize(); slot++) {
+        final int size = Math.min(targetInventory.getSize(), spectatorInventory.getSize());
+        for (int slot = 0; slot < size; slot++) {
             spectatorInventory.setItem(slot, targetInventory.getItem(slot));
         }
 
