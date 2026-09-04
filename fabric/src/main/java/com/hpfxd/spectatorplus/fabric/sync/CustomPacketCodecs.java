@@ -42,17 +42,24 @@ public final class CustomPacketCodecs {
         }
     }
 
+    public static final int MAX_ITEM_BYTES = 2 * 1024 * 1024;
+
     public static ItemStack readItem(RegistryFriendlyByteBuf buf) {
         try {
             int length = buf.readInt();
             if (length == 0) {
                 return ItemStack.EMPTY;
             }
+            if (length < 0 || length > MAX_ITEM_BYTES) {
+                throw new DecoderException("Invalid item bytes length: " + length + " (allowed [0, " + MAX_ITEM_BYTES + "])");
+            }
             byte[] bytes = new byte[length];
             buf.readBytes(bytes);
             java.io.ByteArrayInputStream in = new java.io.ByteArrayInputStream(bytes);
             net.minecraft.nbt.CompoundTag tag = net.minecraft.nbt.NbtIo.readCompressed(in, net.minecraft.nbt.NbtAccounter.unlimitedHeap());
             return ItemStack.OPTIONAL_CODEC.parse(buf.registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), tag).getOrThrow(DecoderException::new);
+        } catch (DecoderException e) {
+            throw e;
         } catch (Exception e) {
             throw new DecoderException("Failed to read ItemStack", e);
         }

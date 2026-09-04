@@ -105,12 +105,18 @@ public class ScreenSyncController {
 
     public static void openPlayerInventory(Minecraft mc) {
         final Player player = SpecUtil.getCameraPlayer(mc);
+        if (player == null) {
+            return;
+        }
         final SyncedInventoryScreen screen = new SyncedInventoryScreen(player);
 
         handleNewSyncedScreen(mc, screen);
     }
 
     public static <S extends Screen & MenuAccess<?>> void handleNewSyncedScreen(Minecraft mc, S screen) {
+        if (mc == null || mc.player == null) {
+            return;
+        }
         isPendingOpen = false;
         mc.player.containerMenu = screen.getMenu();
         mc.gui.setScreen(screen);

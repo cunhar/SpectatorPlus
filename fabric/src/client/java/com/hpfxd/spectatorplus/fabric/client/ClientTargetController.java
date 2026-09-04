@@ -3,6 +3,7 @@ package com.hpfxd.spectatorplus.fabric.client;
 import com.hpfxd.spectatorplus.fabric.client.mixin.ClientLevelAccessor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.protocol.game.ServerboundTeleportToEntityPacket;
@@ -33,6 +34,12 @@ public class ClientTargetController {
     public static void init() {
         ClientTickEvents.START_CLIENT_TICK.register(ClientTargetController::tick);
         ClientEntityEvents.ENTITY_LOAD.register(ClientTargetController::onEntityTrackingStart);
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> reset());
+    }
+
+    public static void reset() {
+        wantedTargetId = null;
+        wantedTargetTicks = 0;
     }
 
     private static void tick(Minecraft mc) {
@@ -49,6 +56,9 @@ public class ClientTargetController {
     }
 
     private static void startSpectatingTrackedEntity(Minecraft mc, Entity entity) {
+        if (mc == null || mc.getConnection() == null || mc.gameMode == null || mc.player == null || entity == null) {
+            return;
+        }
         // Send teleport to entity packet just before we send the attack packet, just to make sure we're not further
         // than the 6 block interaction limit by the time the server receives it.
         mc.getConnection().send(new ServerboundTeleportToEntityPacket(entity.getUUID()));
@@ -56,6 +66,9 @@ public class ClientTargetController {
     }
 
     public static void requestTargetFromServer(Minecraft mc, UUID entityUuid) {
+        if (mc == null || mc.level == null || mc.getConnection() == null || entityUuid == null) {
+            return;
+        }
         final Entity trackedEntity = ((ClientLevelAccessor) mc.level).invokeGetEntities().get(entityUuid);
         if (trackedEntity == null) {
             mc.getConnection().send(new ServerboundTeleportToEntityPacket(entityUuid));

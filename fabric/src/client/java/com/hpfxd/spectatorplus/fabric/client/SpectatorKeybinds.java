@@ -6,6 +6,7 @@ import com.hpfxd.spectatorplus.fabric.client.mixin.SpectatorGuiAccessor;
 import com.hpfxd.spectatorplus.fabric.client.mixin.SpectatorMenuAccessor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.Util;
 import net.minecraft.client.KeyMapping;
@@ -56,10 +57,15 @@ public class SpectatorKeybinds {
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(SpectatorKeybinds::tick);
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> reset());
+    }
+
+    public static void reset() {
+        targetCursorId = null;
     }
 
     private static void tick(Minecraft mc) {
-        if (mc.player != null && mc.gameMode != null && mc.gameMode.getPlayerMode() == GameType.SPECTATOR && mc.level != null) {
+        if (mc.player != null && mc.gameMode != null && mc.gameMode.getPlayerMode() == GameType.SPECTATOR && mc.level != null && mc.getConnection() != null) {
             while (CLOSEST_PLAYER.consumeClick()) {
                 final Entity nearest = mc.level.getNearestPlayer(mc.player.getX(), mc.player.getY(), mc.player.getZ(), 256, EntitySelector.NO_SPECTATORS.and(entity -> mc.getCameraEntity() != entity));
 

@@ -73,7 +73,7 @@ public abstract class AbstractContainerScreenMixin {
             )
     )
     private void spectatorplus$renderContents(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
-        if (!this.spectatorplus$isSyncedScreen()) {
+        if (!this.spectatorplus$isSyncedScreen() || ClientSyncController.syncData == null || ClientSyncController.syncData.screen == null) {
             return;
         }
 
@@ -103,6 +103,9 @@ public abstract class AbstractContainerScreenMixin {
         this.cursorSlot = cursorItem.isEmpty() ? -1 : cursorSlot;
 
         for (final ItemMoveAnimation animation : this.animations) {
+            if (!this.menu.isValidSlotIndex(animation.fromSlot) || !this.menu.isValidSlotIndex(animation.toSlot)) {
+                continue;
+            }
             final Slot fromSlot = this.menu.getSlot(animation.fromSlot);
             final Slot toSlot = this.menu.getSlot(animation.toSlot);
 

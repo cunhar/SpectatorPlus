@@ -33,7 +33,9 @@ public class SyncedInventoryScreen extends InventoryScreen {
     }
 
     private void syncOtherItems() {
-        final SyncedInventoryMenu menu = (SyncedInventoryMenu) this.menu;
+        if (!(this.menu instanceof SyncedInventoryMenu menu)) {
+            return;
+        }
         final Inventory fakeInventory = menu.getInventory();
 
         // Use synced inventory data for all slots (main, armor, offhand)

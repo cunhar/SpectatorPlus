@@ -67,7 +67,9 @@ public abstract class MenuScreensMixin {
             }
 
             // Unable to open, immediately tell the server we've closed this screen.
-            mc.getConnection().send(new ServerboundContainerClosePacket(windowId));
+            if (mc.getConnection() != null) {
+                mc.getConnection().send(new ServerboundContainerClosePacket(windowId));
+            }
             ClientSyncController.syncData.screen = null;
             ScreenSyncController.isPendingOpen = false;
         }

@@ -82,8 +82,10 @@ public class SpectatorArmorHudRenderer {
 
             if (isAir) {
                 // Show empty slot icon if no item
-                guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, TEXTURE_EMPTY_SLOTS[idx], baseX, y,
-                        ITEM_WIDTH, ITEM_HEIGHT);
+                if (idx >= 0 && idx < TEXTURE_EMPTY_SLOTS.length) {
+                    guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, TEXTURE_EMPTY_SLOTS[idx], baseX, y,
+                            ITEM_WIDTH, ITEM_HEIGHT);
+                }
             } else {
                 // Show item icon if present
                 guiGraphics.item(armorStack, baseX, y);

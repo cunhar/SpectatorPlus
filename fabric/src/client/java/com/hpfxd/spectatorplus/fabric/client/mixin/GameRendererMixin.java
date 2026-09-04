@@ -91,7 +91,7 @@ public abstract class GameRendererMixin {
 
     @org.spongepowered.asm.mixin.injection.Redirect(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;submitHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/player/LocalPlayer;I)V"))
     private void spectatorplus$renderCustomArms(ItemInHandRenderer instance, float partialTicks, PoseStack poseStackIn, SubmitNodeCollector submitNodeCollector, net.minecraft.client.player.LocalPlayer localPlayer, int packedLightCoords) {
-        if (this.minecraft.gameMode.getPlayerMode() == GameType.SPECTATOR && SpectatorClientMod.config.renderArms) {
+        if (this.minecraft.gameMode != null && this.minecraft.gameMode.getPlayerMode() == GameType.SPECTATOR && SpectatorClientMod.config.renderArms) {
             final AbstractClientPlayer spectated = SpecUtil.getCameraPlayer(this.minecraft);
             if (spectated != null && !spectated.isSpectator()) {
                 float attackAnim = spectated.getAttackAnim(partialTicks);

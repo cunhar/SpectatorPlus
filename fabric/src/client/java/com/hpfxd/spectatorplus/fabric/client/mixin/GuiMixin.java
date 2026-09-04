@@ -203,15 +203,6 @@ public abstract class GuiMixin {
         return instance.getCurrentItemAttackStrengthDelay();
     }
 
-    @Redirect(method = "extractSelectedItemName(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;canHurtPlayer()Z"))
-    private boolean spectatorplus$moveHeldItemTooltipUp(MultiPlayerGameMode instance) {
-        final AbstractClientPlayer spectated = SpecUtil.getCameraPlayer(this.minecraft);
-        if (spectated != null && !spectated.isCreative() && !spectated.isSpectator()) {
-            return true;
-        }
-        return instance.canHurtPlayer();
-    }
-
     @ModifyConstant(method = "extractPlayerHealth(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V", constant = @Constant(intValue = 39))
     private int spectatorplus$moveHealthDown(int constant) {
         if ((ClientSyncController.syncData == null || ClientSyncController.syncData.selectedHotbarSlot == -1)
@@ -231,7 +222,8 @@ public abstract class GuiMixin {
 
     @Redirect(method = "extractItemHotbar(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/DeltaTracker;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;getSelectedSlot()I", opcode = Opcodes.GETFIELD))
     private int spectatorplus$showSyncedSelectedSlot(Inventory inventory) {
-        if (ClientSyncController.syncData != null && ClientSyncController.syncData.selectedHotbarSlot != -1
+        if (ClientSyncController.syncData != null && ClientSyncController.syncData.selectedHotbarSlot >= 0
+                && ClientSyncController.syncData.selectedHotbarSlot < 9
                 && SpecUtil.getCameraPlayer(this.minecraft) != null) {
             return ClientSyncController.syncData.selectedHotbarSlot;
         }
@@ -259,9 +251,12 @@ public abstract class GuiMixin {
 
     @Redirect(method = "extractItemHotbar(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/DeltaTracker;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;getItem(I)Lnet/minecraft/world/item/ItemStack;"))
     private ItemStack spectatorplus$showSyncedItems(Inventory instance, int slot) {
-        if (ClientSyncController.syncData != null && ClientSyncController.syncData.selectedHotbarSlot != -1
+        if (ClientSyncController.syncData != null && ClientSyncController.syncData.selectedHotbarSlot >= 0
+                && ClientSyncController.syncData.selectedHotbarSlot < 9
                 && SpecUtil.getCameraPlayer(this.minecraft) != null) {
-            return ClientSyncController.syncData.hotbarItems.get(slot);
+            if (slot >= 0 && slot < ClientSyncController.syncData.hotbarItems.size()) {
+                return ClientSyncController.syncData.hotbarItems.get(slot);
+            }
         }
         return instance.getItem(slot);
     }
@@ -277,7 +272,8 @@ public abstract class GuiMixin {
 
     @Redirect(method = "tick()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;getSelectedItem()Lnet/minecraft/world/item/ItemStack;"))
     private ItemStack spectatorplus$modifyTooltipTick(Inventory instance) {
-        if (ClientSyncController.syncData != null && ClientSyncController.syncData.selectedHotbarSlot != -1
+        if (ClientSyncController.syncData != null && ClientSyncController.syncData.selectedHotbarSlot >= 0
+                && ClientSyncController.syncData.selectedHotbarSlot < 9
                 && SpecUtil.getCameraPlayer(this.minecraft) != null) {
             return ClientSyncController.syncData.hotbarItems.get(ClientSyncController.syncData.selectedHotbarSlot);
         }
