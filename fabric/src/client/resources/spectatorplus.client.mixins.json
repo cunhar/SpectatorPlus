@@ -14,8 +14,6 @@
     "InventoryAccessor",
     "ItemInHandRendererAccessor",
     "ItemInHandRendererMixin",
-    "LevelRendererAccessor",
-    "LevelRendererMixin",
     "LivingEntityMixin",
     "LocalPlayerAccessor",
     "LocalPlayerMixin",

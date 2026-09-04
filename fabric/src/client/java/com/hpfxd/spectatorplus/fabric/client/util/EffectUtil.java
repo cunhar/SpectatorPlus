@@ -16,29 +16,36 @@ public class EffectUtil {
     private static final Map<Holder<MobEffect>, MobEffectInstance> activeEffects = new HashMap<>();
 
     public static void updateEffectInstances(List<SyncedEffect> effects) {
-        // 收集新的效果
+        // Collect new effects safely
         Set<Holder<MobEffect>> newEffects = new HashSet<>();
 
         for (SyncedEffect syncedEffect : effects) {
-            Holder<MobEffect> effect = BuiltInRegistries.MOB_EFFECT.get(Identifier.parse(syncedEffect.effectKey))
-                    .orElseThrow(() -> new IllegalArgumentException("Unknown effect: " + syncedEffect.effectKey));
-            newEffects.add(effect);
-        }
-
-        // 移除不再存在的效果
-        activeEffects.entrySet().removeIf(entry -> !newEffects.contains(entry.getKey()));
-
-        // 添加新效果（保持现有实例的BlendState）
-        for (SyncedEffect syncedEffect : effects) {
-            Holder<MobEffect> effect = BuiltInRegistries.MOB_EFFECT.get(Identifier.parse(syncedEffect.effectKey))
-                    .orElseThrow(() -> new IllegalArgumentException("Unknown effect: " + syncedEffect.effectKey));
-
-            if (!activeEffects.containsKey(effect)) {
-                MobEffectInstance instance = new MobEffectInstance(effect, syncedEffect.duration,
-                        syncedEffect.amplifier, false, true, true);
-                activeEffects.put(effect, instance);
+            Identifier id = Identifier.tryParse(syncedEffect.effectKey);
+            if (id != null) {
+                BuiltInRegistries.MOB_EFFECT.get(id).ifPresent(newEffects::add);
             }
         }
+
+        // Remove effects that are no longer present
+        activeEffects.entrySet().removeIf(entry -> !newEffects.contains(entry.getKey()));
+
+        // Add new effects while maintaining existing instances
+        for (SyncedEffect syncedEffect : effects) {
+            Identifier id = Identifier.tryParse(syncedEffect.effectKey);
+            if (id != null) {
+                BuiltInRegistries.MOB_EFFECT.get(id).ifPresent(effect -> {
+                    if (!activeEffects.containsKey(effect)) {
+                        MobEffectInstance instance = new MobEffectInstance(effect, syncedEffect.duration,
+                                syncedEffect.amplifier, false, true, true);
+                        activeEffects.put(effect, instance);
+                    }
+                });
+            }
+        }
+    }
+
+    public static void clearActiveEffects() {
+        activeEffects.clear();
     }
 
     public static boolean hasValidSyncData() {

@@ -55,9 +55,24 @@ dependencies {
 
     include(implementation("io.github.llamalad7:mixinextras-fabric:${property("mixinextras_version")}")!!)
     annotationProcessor("io.github.llamalad7:mixinextras-fabric:${property("mixinextras_version")}")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(sourceSets.getByName("client").output)
+}
+
+sourceSets {
+    named("test") {
+        compileClasspath += sourceSets.getByName("client").output
+        runtimeClasspath += sourceSets.getByName("client").output
+    }
 }
 
 tasks {
+    test {
+        useJUnitPlatform()
+    }
+
     processResources {
         inputs.property("version", project.version)
         filesMatching("fabric.mod.json") {

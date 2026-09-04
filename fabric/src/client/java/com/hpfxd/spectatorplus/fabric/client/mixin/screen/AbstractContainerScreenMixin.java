@@ -113,7 +113,7 @@ public abstract class AbstractContainerScreenMixin {
             this.spectatorplus$renderCursorItem(guiGraphics, animation.itemStack, cursorX, cursorY);
         }
 
-        if (!this.cursorItem.isEmpty() && this.cursorSlot > 0 && this.menu.isValidSlotIndex(this.cursorSlot)) {
+        if (!this.cursorItem.isEmpty() && this.cursorSlot >= 0 && this.menu.isValidSlotIndex(this.cursorSlot)) {
             final Slot slot = this.menu.getSlot(this.cursorSlot);
             this.spectatorplus$renderCursorItem(guiGraphics, this.cursorItem, slot.x, slot.y);
         }

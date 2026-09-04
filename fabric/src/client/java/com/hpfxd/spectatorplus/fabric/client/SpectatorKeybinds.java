@@ -59,7 +59,7 @@ public class SpectatorKeybinds {
     }
 
     private static void tick(Minecraft mc) {
-        if (mc.player != null && mc.gameMode.getPlayerMode() == GameType.SPECTATOR) {
+        if (mc.player != null && mc.gameMode != null && mc.gameMode.getPlayerMode() == GameType.SPECTATOR && mc.level != null) {
             while (CLOSEST_PLAYER.consumeClick()) {
                 final Entity nearest = mc.level.getNearestPlayer(mc.player.getX(), mc.player.getY(), mc.player.getZ(), 256, EntitySelector.NO_SPECTATORS.and(entity -> mc.getCameraEntity() != entity));
 
@@ -84,8 +84,9 @@ public class SpectatorKeybinds {
 
     private static void targetNext(Minecraft mc, int shift) {
         final PlayerInfo target = shiftPlayerCursor(mc, shift);
+        final Entity camera = mc.getCameraEntity();
 
-        if (target != null && !target.getProfile().id().equals(mc.getCameraEntity().getUUID())) {
+        if (target != null && (camera == null || !target.getProfile().id().equals(camera.getUUID()))) {
             setTarget(mc, target.getProfile().id());
             mc.player.sendOverlayMessage(Component.translatable("spectatorplus.target.now-spectating", Component.empty().append(mc.gui.hud.getTabList().getNameForDisplay(target))
                     .withStyle(ChatFormatting.WHITE)).withStyle(ChatFormatting.GRAY));
@@ -134,7 +135,7 @@ public class SpectatorKeybinds {
 
     private static void selectInMenu(Minecraft mc, UUID uuid) {
         final TeleportToPlayerMenuCategory category = new TeleportToPlayerMenuCategory();
-        final SpectatorMenuItem menuItem = Iterables.find(category.getItems(), item -> item instanceof PlayerMenuItem && uuid.equals(((PlayerMenuItemAccessor) item).getPlayerInfo().getProfile().id()));
+        final SpectatorMenuItem menuItem = Iterables.find(category.getItems(), item -> item instanceof PlayerMenuItem && uuid.equals(((PlayerMenuItemAccessor) item).getPlayerInfo().getProfile().id()), null);
 
         if (menuItem == null) {
             return;

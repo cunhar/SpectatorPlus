@@ -61,9 +61,12 @@ public abstract class LivingEntityMixin extends Entity {
     @Redirect(method = { "hasEffect", "getEffect", "getActiveEffects",
             "tickEffects" }, at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/LivingEntity;activeEffects:Ljava/util/Map;"))
     private Map<Holder<MobEffect>, MobEffectInstance> spectatorplus$redirectActiveEffects(LivingEntity instance) {
-        // 只对玩家且满足条件时才重定向
-        if (instance.level().isClientSide() && instance instanceof Player && EffectUtil.shouldUseSpectatorData()) {
-            return EffectUtil.getActiveEffectsMap();
+        if (instance.level().isClientSide() && EffectUtil.shouldUseSpectatorData()) {
+            Minecraft mc = Minecraft.getInstance();
+            final Player spectated = SpecUtil.getCameraPlayer(mc);
+            if (instance == spectated || instance == mc.player) {
+                return EffectUtil.getActiveEffectsMap();
+            }
         }
         return ((LivingEntityAccessor) instance).spectatorplus$getActiveEffects();
     }

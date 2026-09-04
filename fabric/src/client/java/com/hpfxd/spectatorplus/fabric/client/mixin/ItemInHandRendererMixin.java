@@ -32,7 +32,7 @@ public abstract class ItemInHandRendererMixin {
     @Shadow private ItemStack mainHandItem;
     @Shadow private ItemStack offHandItem;
 
-    @Unique private AbstractClientPlayer spectated;
+    @Unique private int spectatedId = -1;
 
     @Inject(at = @At("HEAD"), method = "tick", cancellable = true)
     public void spectatorplus$fixSpectatorHandHeight(CallbackInfo ci) {
@@ -54,7 +54,7 @@ public abstract class ItemInHandRendererMixin {
                 this.offHandItem = offHandItem;
             }
 
-            if (this.spectated == spectated) {
+            if (this.spectatedId == spectated.getId()) {
                 boolean sleeping = spectated.isSleeping() || spectated.getPose() == Pose.SLEEPING;
                 float f = spectated.getAttackStrengthScale(1.0F);
                 float g = (this.mainHandItem != mainHandItem || sleeping) ? 0.0F : f * f * f;
@@ -72,14 +72,14 @@ public abstract class ItemInHandRendererMixin {
             } else {
                 // this is the first tick of spectating a new player
 
-                this.spectated = spectated;
+                this.spectatedId = spectated.getId();
                 this.mainHandHeight = 1F;
                 this.offHandHeight = 1F;
                 this.mainHandItem = mainHandItem;
                 this.offHandItem = offHandItem;
             }
         } else {
-            this.spectated = null;
+            this.spectatedId = -1;
         }
     }
 

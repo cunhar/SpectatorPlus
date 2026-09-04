@@ -94,9 +94,11 @@ public class ClientSyncController {
         if (playerId == null) {
             syncData = null;
             ScreenSyncController.reset();
+            EffectUtil.clearActiveEffects();
         } else if (syncData == null || !syncData.playerId.equals(playerId)) {
             syncData = new ClientSyncData(playerId);
             ScreenSyncController.reset();
+            EffectUtil.clearActiveEffects();
         }
     }
 }
